@@ -448,17 +448,25 @@ def medial_axis(image, mask=None, return_distance=False):
     # OR
     # 3. Keep if # pixels in neighbourhood is 2 or less
     # Note that table is independent of image
-    center_is_foreground = (np.arange(512) & 2**4).astype(bool)
-    table = (center_is_foreground  # condition 1.
-                &
-            (np.array([ndi.label(_pattern_of(index), _eight_connect)[1] !=
-                       ndi.label(_pattern_of(index & ~ 2**4),
-                                    _eight_connect)[1]
-                       for index in range(512)])  # condition 2
-                |
-        np.array([np.sum(_pattern_of(index)) < 3 for index in range(512)]))
-        # condition 3
-            )
+    # ----
+    # center_is_foreground = (np.arange(512) & 2**4).astype(bool)
+    # table = (center_is_foreground  # condition 1.
+    #             &
+    #         (np.array([ndi.label(_pattern_of(index), _eight_connect)[1] !=
+    #                    ndi.label(_pattern_of(index & ~ 2**4),
+    #                                 _eight_connect)[1]
+    #                    for index in range(512)])  # condition 2
+    #             |
+    #     np.array([np.sum(_pattern_of(index)) < 3 for index in range(512)]))
+    #     # condition 3
+    #         )
+
+    a = np.arange(512)[:, np.newaxis] >> np.arange(8) & 1
+    a = np.insert(a, 4, 0, 1).reshape(-1, 3, 3)
+    strc = np.ones((3, 3), bool)
+    nlab = np.array([ndi.label(x, strc)[1] for x in a])
+    table = np.logical_and((a[:, 0, 1] & a[:, 1, 0] & a[:, 1, 2] & a[:, 2, 1]),
+                           np.logical_and(a.sum((1, 2)) > 1, nlab < 2))
 
     # Build distance transform
     distance = ndi.distance_transform_edt(masked_image)
