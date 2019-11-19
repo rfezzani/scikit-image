@@ -10,11 +10,13 @@ cdef extern from "numpy/npy_math.h":
     bint npy_isnan(double x)
     bint npy_isnan(float x)
 
+
 cdef inline np_floats _get_fraction(np_floats from_value, np_floats to_value,
                                     np_floats level):
     if (to_value == from_value):
         return 0
     return ((level - from_value) / (to_value - from_value))
+
 
 cdef inline tuple _top(Py_ssize_t r0, Py_ssize_t c0, np_floats ul,
                        np_floats ur, np_floats level):
@@ -24,6 +26,7 @@ cdef inline tuple _top(Py_ssize_t r0, Py_ssize_t c0, np_floats ul,
         dtype = np.float64
     return dtype(r0), dtype(c0 + _get_fraction(ul, ur, level))
 
+
 cdef inline tuple _bottom(Py_ssize_t r1, Py_ssize_t c0, np_floats ll,
                           np_floats lr, np_floats level):
     if np_floats is cnp.float32_t:
@@ -32,6 +35,7 @@ cdef inline tuple _bottom(Py_ssize_t r1, Py_ssize_t c0, np_floats ll,
         dtype = np.float64
     return dtype(r1), dtype(c0 + _get_fraction(ll, lr, level))
 
+
 cdef inline tuple _left(Py_ssize_t r0, Py_ssize_t c0, np_floats ul,
                         np_floats ll, np_floats level):
     if np_floats is cnp.float32_t:
@@ -39,6 +43,7 @@ cdef inline tuple _left(Py_ssize_t r0, Py_ssize_t c0, np_floats ul,
     else:
         dtype = np.float64
     return dtype(r0 + _get_fraction(ul, ll, level)), dtype(c0)
+
 
 cdef inline tuple _right(Py_ssize_t r0, Py_ssize_t c1, np_floats ur,
                          np_floats lr, np_floats level):
@@ -67,11 +72,6 @@ def iterate_and_store(np_floats[:, :] array, np_floats level,
 
     if n_row < 2 or n_col < 2:
         raise ValueError("Input array must be at least 2x2.")
-
-    if np_floats is cnp.float32_t:
-        dtype = np.float32
-    else:
-        dtype = np.float64
 
     cdef list arc_list = []
 
@@ -144,83 +144,78 @@ def iterate_and_store(np_floats[:, :] array, np_floats level,
                 # square. Cases 0 and 15 are entirely below/above the contour.
                 continue
 
-            top = dtype(r0), dtype(c0 + _get_fraction(ul, ur, level))
-            bottom = dtype(r1), dtype(c0 + _get_fraction(ll, lr, level))
-            left = dtype(r0 + _get_fraction(ul, ll, level)), dtype(c0)
-            right = dtype(r0 + _get_fraction(ur, lr, level)), dtype(c1)
-
             if (square_case == 1):
                 # top to left
-                arc_list.append(top)
-                arc_list.append(left)
+                arc_list.append(_top(r0, c0, ul, ur, level))
+                arc_list.append(_left(r0, c0, ul, ll, level))
             elif (square_case == 2):
                 # right to top
-                arc_list.append(right)
-                arc_list.append(top)
+                arc_list.append(_right(r0, c1, ur, lr, level))
+                arc_list.append(_top(r0, c0, ul, ur, level))
             elif (square_case == 3):
                 # right to left
-                arc_list.append(right)
-                arc_list.append(left)
+                arc_list.append(_right(r0, c1, ur, lr, level))
+                arc_list.append(_left(r0, c0, ul, ll, level))
             elif (square_case == 4):
                 # left to bottom
-                arc_list.append(left)
-                arc_list.append(bottom)
+                arc_list.append(_left(r0, c0, ul, ll, level))
+                arc_list.append(_bottom(r1, c0, ll, lr, level))
             elif (square_case == 5):
                 # top to bottom
-                arc_list.append(top)
-                arc_list.append(bottom)
+                arc_list.append(_top(r0, c0, ul, ur, level))
+                arc_list.append(_bottom(r1, c0, ll, lr, level))
             elif (square_case == 6):
                 if vertex_connect_high:
-                    arc_list.append(left)
-                    arc_list.append(top)
+                    arc_list.append(_left(r0, c0, ul, ll, level))
+                    arc_list.append(_top(r0, c0, ul, ur, level))
 
-                    arc_list.append(right)
-                    arc_list.append(bottom)
+                    arc_list.append(_right(r0, c1, ur, lr, level))
+                    arc_list.append(_bottom(r1, c0, ll, lr, level))
                 else:
-                    arc_list.append(right)
-                    arc_list.append(top)
-                    arc_list.append(left)
-                    arc_list.append(bottom)
+                    arc_list.append(_right(r0, c1, ur, lr, level))
+                    arc_list.append(_top(r0, c0, ul, ur, level))
+                    arc_list.append(_left(r0, c0, ul, ll, level))
+                    arc_list.append(_bottom(r1, c0, ll, lr, level))
             elif (square_case == 7):
                 # right to bottom
-                arc_list.append(right)
-                arc_list.append(bottom)
+                arc_list.append(_right(r0, c1, ur, lr, level))
+                arc_list.append(_bottom(r1, c0, ll, lr, level))
             elif (square_case == 8):
                 # bottom to right
-                arc_list.append(bottom)
-                arc_list.append(right)
+                arc_list.append(_bottom(r1, c0, ll, lr, level))
+                arc_list.append(_right(r0, c1, ur, lr, level))
             elif (square_case == 9):
                 if vertex_connect_high:
-                    arc_list.append(top)
-                    arc_list.append(right)
+                    arc_list.append(_top(r0, c0, ul, ur, level))
+                    arc_list.append(_right(r0, c1, ur, lr, level))
 
-                    arc_list.append(bottom)
-                    arc_list.append(left)
+                    arc_list.append(_bottom(r1, c0, ll, lr, level))
+                    arc_list.append(_left(r0, c0, ul, ll, level))
                 else:
-                    arc_list.append(top)
-                    arc_list.append(left)
+                    arc_list.append(_top(r0, c0, ul, ur, level))
+                    arc_list.append(_left(r0, c0, ul, ll, level))
 
-                    arc_list.append(bottom)
-                    arc_list.append(right)
+                    arc_list.append(_bottom(r1, c0, ll, lr, level))
+                    arc_list.append(_right(r0, c1, ur, lr, level))
             elif (square_case == 10):
                 # bottom to top
-                arc_list.append(bottom)
-                arc_list.append(top)
+                arc_list.append(_bottom(r1, c0, ll, lr, level))
+                arc_list.append(_top(r0, c0, ul, ur, level))
             elif (square_case == 11):
                 # bottom to left
-                arc_list.append(bottom)
-                arc_list.append(left)
+                arc_list.append(_bottom(r1, c0, ll, lr, level))
+                arc_list.append(_left(r0, c0, ul, ll, level))
             elif (square_case == 12):
                 # lef to right
-                arc_list.append(left)
-                arc_list.append(right)
+                arc_list.append(_left(r0, c0, ul, ll, level))
+                arc_list.append(_right(r0, c1, ur, lr, level))
             elif (square_case == 13):
                 # top to right
-                arc_list.append(top)
-                arc_list.append(right)
+                arc_list.append(_top(r0, c0, ul, ur, level))
+                arc_list.append(_right(r0, c1, ur, lr, level))
             elif (square_case == 14):
                 # left to top
-                arc_list.append(left)
-                arc_list.append(top)
+                arc_list.append(_left(r0, c0, ul, ll, level))
+                arc_list.append(_top(r0, c0, ul, ur, level))
 
     return arc_list
