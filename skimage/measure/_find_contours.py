@@ -1,15 +1,16 @@
+from warnings import warn
 import numpy as np
 from . import _find_contours_cy
+from .._shared.utils import convert_to_float
 
 from collections import deque
 
 _param_options = ('high', 'low')
 
 
-def find_contours(array, level,
-                  fully_connected='low', positive_orientation='low',
-                  *,
-                  mask=None):
+def find_contours(array, level, fully_connected='low',
+                  positive_orientation='low', *, mask=None,
+                  preserve_range=None):
     """Find iso-valued contours in a 2D array for a given level value.
 
     Uses the "marching squares" method to compute a the iso-valued contours of
@@ -18,7 +19,7 @@ def find_contours(array, level,
 
     Parameters
     ----------
-    array : 2D ndarray of double
+    array : 2D ndarray
         Input data in which to find contours.
     level : float
         Value along which to find contours in the array.
@@ -36,6 +37,10 @@ def find_contours(array, level,
         A boolean mask, True where we want to draw contours.
         Note that NaN values are always excluded from the considered region
         (``mask`` is set to ``False`` wherever ``array`` is ``NaN``).
+    preserve_range : bool, optional
+        Whether to keep the original range of values. Otherwise, the input
+        image is converted according to the conventions of `img_as_float`.
+        Also see https://scikit-image.org/docs/dev/user_guide/data_types.html
 
     Returns
     -------
@@ -114,10 +119,9 @@ def find_contours(array, level,
     [array([[0. , 0.5],
            [0.5, 0. ]])]
     """
-    array = np.asarray(array, dtype=np.double)
     if array.ndim != 2:
         raise ValueError('Only 2D arrays are supported.')
-    level = float(level)
+
     if mask is not None:
         if not np.can_cast(mask.dtype, bool, casting='safe'):
             raise TypeError('Parameter "mask" must be a binary array.')
@@ -128,39 +132,42 @@ def find_contours(array, level,
     if (fully_connected not in _param_options or
        positive_orientation not in _param_options):
         raise ValueError('Parameters "fully_connected" and'
-        ' "positive_orientation" must be either "high" or "low".')
-    point_list = _find_contours_cy.iterate_and_store(array, level,
-                                                     fully_connected == 'high',
-                                                     mask=mask)
-    contours = _assemble_contours(_take_2(point_list))
+                         ' "positive_orientation" must be either '
+                         '"high" or "low".')
+
+    if preserve_range is None and np.issubdtype(array.dtype, np.integer):
+        warn('Image dtype is not float. By default find_contours will assume '
+             'you want to preserve the range of your image '
+             '(preserve_range=True). In scikit-image 0.19 this behavior will '
+             'change to preserve_range=False. To avoid this warning, '
+             'explicitly specify the preserve_range parameter.',
+             stacklevel=2)
+        preserve_range = True
+
+    array = convert_to_float(array, preserve_range)
+
+    level = array.dtype.type(level)
+
+    point_list = _find_contours_cy.iterate_and_store(
+        array, level, fully_connected == 'high', mask=mask)
+    contours = _assemble_contours(point_list)
     if positive_orientation == 'high':
         contours = [c[::-1] for c in contours]
     return contours
 
 
-def _take_2(seq):
-    iterator = iter(seq)
-    while True:
-        try:
-            n1 = next(iterator)
-            n2 = next(iterator)
-            yield (n1, n2)
-        except StopIteration:
-            return
-
-
-def _assemble_contours(points_iterator):
+def _assemble_contours(point_list):
     current_index = 0
     contours = {}
     starts = {}
     ends = {}
-    for from_point, to_point in points_iterator:
+    for from_point, to_point in zip(point_list[::2], point_list[1::2]):
         # Ignore degenerate segments.
         # This happens when (and only when) one vertex of the square is
         # exactly the contour level, and the rest are above or below.
         # This degenerate vertex will be picked up later by neighboring
         # squares.
-        if from_point == to_point:
+        if np.all(from_point == to_point):
             continue
 
         tail_data = starts.get(to_point)
@@ -228,4 +235,5 @@ def _assemble_contours(points_iterator):
             ends[to_point] = (head, head_num)
     # end iteration over from_ and to_ points
 
-    return [np.array(contour) for (num, contour) in sorted(contours.items())]
+    return [np.array(contour)
+            for (num, contour) in sorted(contours.items())]
