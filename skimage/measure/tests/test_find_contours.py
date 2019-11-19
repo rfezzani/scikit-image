@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from skimage.measure import find_contours
 
 from skimage._shared import testing
@@ -130,3 +131,14 @@ def test_invalid_input():
         find_contours(r, 0.5, 'foo', 'bar')
     with testing.raises(ValueError):
         find_contours(r[..., None], 0.5)
+
+
+@pytest.mark.parametrize("preserve_range", [True, False])
+def test_dtype(preserve_range):
+    a_f32 = a.copy()
+    a_f64 = a.astype('float64')
+    a_i64 = a.astype(int)
+
+    assert find_contours(a_i64, 0.5)[0].dtype == 'float64'
+    assert find_contours(a_f64, 0.5)[0].dtype == a_f64.dtype
+    assert find_contours(a_f32, 0.5)[0].dtype == a_f32.dtype
