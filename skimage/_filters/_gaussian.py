@@ -2,7 +2,7 @@ from collections.abc import Iterable
 import numpy as np
 from scipy import ndimage as ndi
 
-from ..util import img_as_float
+from ..util.dtype import img_as_float
 from .._shared.utils import warn, convert_to_float
 
 

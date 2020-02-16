@@ -54,7 +54,8 @@ import functools
 import numpy as np
 from warnings import warn
 from scipy import linalg
-from ..util import dtype, dtype_limits
+from ..util.dtype import img_as_float, dtype_limits
+from ..filters._gaussian import _guess_spatial_dimensions
 
 
 def guess_spatial_dimensions(image):
@@ -76,8 +77,8 @@ def guess_spatial_dimensions(image):
     ValueError
         If the image array has less than two or more than four dimensions.
     """
-    from ..filters import _guess_spatial_dimensions
-    warn('This function is deprecated and will be removed in 0.18', stacklevel=2)
+    warn('This function is deprecated and will be removed in 0.18',
+         stacklevel=2)
     return _guess_spatial_dimensions(image)
 
 
@@ -145,7 +146,7 @@ def _prepare_colorarray(arr):
                "got (" + (", ".join(map(str, arr.shape))) + ")")
         raise ValueError(msg)
 
-    return dtype.img_as_float(arr)
+    return img_as_float(arr)
 
 
 def _prepare_rgba_array(arr):
@@ -160,7 +161,7 @@ def _prepare_rgba_array(arr):
                "got {0}".format(arr.shape))
         raise ValueError(msg)
 
-    return dtype.img_as_float(arr)
+    return img_as_float(arr)
 
 
 def rgba2rgb(rgba, background=(1, 1, 1)):
@@ -1422,7 +1423,7 @@ def separate_stains(rgb, conv_matrix):
     >>> ihc = data.immunohistochemistry()
     >>> ihc_hdx = separate_stains(ihc, hdx_from_rgb)
     """
-    rgb = dtype.img_as_float(rgb, force_copy=True)
+    rgb = img_as_float(rgb, force_copy=True)
     rgb += 2
     stains = np.reshape(-np.log10(rgb), (-1, 3)) @ conv_matrix
     return np.reshape(stains, rgb.shape)
@@ -1483,7 +1484,7 @@ def combine_stains(stains, conv_matrix):
     """
     from ..exposure import rescale_intensity
 
-    stains = dtype.img_as_float(stains)
+    stains = img_as_float(stains)
     logrgb2 = -np.reshape(stains, (-1, 3)) @ conv_matrix
     rgb2 = np.power(10, logrgb2)
     return rescale_intensity(np.reshape(rgb2 - 2, stains.shape),
@@ -1589,7 +1590,7 @@ def _prepare_lab_array(arr):
     shape = arr.shape
     if shape[-1] < 3:
         raise ValueError('Input array has less than 3 color channels')
-    return dtype.img_as_float(arr, force_copy=True)
+    return img_as_float(arr, force_copy=True)
 
 
 def rgb2yuv(rgb):
