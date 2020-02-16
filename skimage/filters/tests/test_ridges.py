@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_less, assert_equal
-from skimage.filters import meijering, sato, frangi, hessian
-from skimage.data import camera, retina
-from skimage.util import crop, invert
-from skimage.color import rgb2gray
-from skimage._shared._warnings import expected_warnings
+from ...filters import meijering, sato, frangi, hessian
+from ...data import camera, retina
+from ...util import crop, invert
+from ..._color.colorconv import rgb2gray
+from ..._shared._warnings import expected_warnings
 
 
 def test_2d_null_matrix():

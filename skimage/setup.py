@@ -7,7 +7,7 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('skimage', parent_package, top_path)
 
     config.add_subpackage('_shared')
-    config.add_subpackage('color')
+    config.add_subpackage('_color')
     config.add_subpackage('data')
     config.add_subpackage('draw')
     config.add_subpackage('exposure')

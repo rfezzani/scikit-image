@@ -1,20 +1,18 @@
 import warnings
-
 import numpy as np
 import pytest
-from skimage import util
-from skimage import data
-from skimage import exposure
-from skimage.exposure.exposure import intensity_range
-from skimage.color import rgb2gray
-from skimage.util.dtype import dtype_range
 
-from skimage._shared._warnings import expected_warnings
-from skimage._shared import testing
-from skimage._shared.testing import (assert_array_equal,
-                                     assert_array_almost_equal,
-                                     assert_equal,
-                                     assert_almost_equal)
+from ...data import astronaut, camera
+from ... import exposure
+from ...exposure.exposure import intensity_range
+from ..._color.colorconv import rgb2gray
+from ...util.dtype import dtype_range, img_as_float, img_as_uint, img_as_ubyte
+
+from ..._shared._warnings import expected_warnings
+from ..._shared import testing
+from ..._shared.testing import (assert_array_equal,
+                                assert_array_almost_equal,
+                                assert_equal, assert_almost_equal)
 
 
 # Test integer histograms
@@ -121,9 +119,9 @@ def test_normalize():
 
 np.random.seed(0)
 
-test_img_int = data.camera()
+test_img_int = camera()
 # squeeze image intensities to lower image contrast
-test_img = util.img_as_float(test_img_int)
+test_img = img_as_float(test_img_int)
 test_img = exposure.rescale_intensity(test_img / 5. + 100)
 
 
@@ -135,7 +133,7 @@ def test_equalize_uint8_approx():
 
 
 def test_equalize_ubyte():
-    img = util.img_as_ubyte(test_img)
+    img = img_as_ubyte(test_img)
     img_eq = exposure.equalize_hist(img)
 
     cdf, bin_edges = exposure.cumulative_distribution(img_eq)
@@ -143,7 +141,7 @@ def test_equalize_ubyte():
 
 
 def test_equalize_float():
-    img = util.img_as_float(test_img)
+    img = img_as_float(test_img)
     img_eq = exposure.equalize_hist(img)
 
     cdf, bin_edges = exposure.cumulative_distribution(img_eq)
@@ -151,7 +149,7 @@ def test_equalize_float():
 
 
 def test_equalize_masked():
-    img = util.img_as_float(test_img)
+    img = img_as_float(test_img)
     mask = np.zeros(test_img.shape)
     mask[50:150, 50:250] = 1
     img_mask_eq = exposure.equalize_hist(img, mask=mask)
@@ -318,7 +316,7 @@ def test_rescale_nan_warning(in_range, out_range):
 def test_adapthist_grayscale():
     """Test a grayscale float image
     """
-    img = util.img_as_float(data.astronaut())
+    img = img_as_float(astronaut())
     img = rgb2gray(img)
     img = np.dstack((img, img, img))
     adapted = exposure.equalize_adapthist(img, kernel_size=(57, 51),
@@ -331,7 +329,7 @@ def test_adapthist_grayscale():
 def test_adapthist_color():
     """Test an RGB color uint16 image
     """
-    img = util.img_as_uint(data.astronaut())
+    img = img_as_uint(astronaut())
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always')
         hist, bin_centers = exposure.histogram(img)
@@ -344,13 +342,12 @@ def test_adapthist_color():
     full_scale = exposure.rescale_intensity(img)
     assert_almost_equal(peak_snr(full_scale, adapted), 109.393, 1)
     assert_almost_equal(norm_brightness_err(full_scale, adapted), 0.02, 2)
-    return data, adapted
 
 
 def test_adapthist_alpha():
     """Test an RGBA color image
     """
-    img = util.img_as_float(data.astronaut())
+    img = img_as_float(astronaut())
     alpha = np.ones((img.shape[0], img.shape[1]), dtype=float)
     img = np.dstack((img, alpha))
     adapted = exposure.equalize_adapthist(img)
@@ -365,7 +362,7 @@ def test_adapthist_alpha():
 def test_adapthist_borders():
     """Test border processing
     """
-    img = rgb2gray(util.img_as_float(data.astronaut()))
+    img = rgb2gray(img_as_float(astronaut()))
     adapted = exposure.equalize_adapthist(img, 11)
     width = 42
     # Check last columns are procesed
@@ -389,8 +386,8 @@ def peak_snr(img1, img2):
     """
     if img1.ndim == 3:
         img1, img2 = rgb2gray(img1.copy()), rgb2gray(img2.copy())
-    img1 = util.img_as_float(img1)
-    img2 = util.img_as_float(img2)
+    img1 = img_as_float(img1)
+    img2 = img_as_float(img2)
     mse = 1. / img1.size * np.square(img1 - img2).sum()
     _, max_ = dtype_range[img1.dtype.type]
     return 20 * np.log(max_ / mse)

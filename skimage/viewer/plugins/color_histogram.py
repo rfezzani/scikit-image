@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from ... import color, exposure
-from .plotplugin import PlotPlugin
+from ..._color.colorconv import rgb2lab, lab2rgb
+from ...exposure.exposure import rescale_intensity
 from ..canvastools import RectangleTool
+from .plotplugin import PlotPlugin
 
 
 class ColorHistogram(PlotPlugin):
@@ -22,7 +23,7 @@ class ColorHistogram(PlotPlugin):
         self._on_new_image(image_viewer.image)
 
     def _on_new_image(self, image):
-        self.lab_image = color.rgb2lab(image)
+        self.lab_image = rgb2lab(image)
 
         # Calculate color histogram in the Lab colorspace:
         L, a, b = self.lab_image.T
@@ -36,7 +37,7 @@ class ColorHistogram(PlotPlugin):
                      'extents': (left, right, left, right)}
         # Clip bin heights that dominate a-b histogram
         max_val = pct_total_area(hist, percentile=self.max_pct)
-        hist = exposure.rescale_intensity(hist, in_range=(0, max_val))
+        hist = rescale_intensity(hist, in_range=(0, max_val))
         self.ax.imshow(hist, extent=ab_extents, cmap=plt.cm.gray)
 
         self.ax.set_title('Color Histogram')
@@ -58,7 +59,7 @@ class ColorHistogram(PlotPlugin):
         self.mask = ((a > y0) & (a < y1)) & ((b > x0) & (b < x1))
         lab_masked[..., 1:][~self.mask.T] = 0
 
-        self.image_viewer.image = color.lab2rgb(lab_masked)
+        self.image_viewer.image = lab2rgb(lab_masked)
 
     def output(self):
         """Return the image mask and the histogram data.

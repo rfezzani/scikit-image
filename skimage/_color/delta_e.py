@@ -20,7 +20,7 @@ https://en.wikipedia.org/wiki/Color_difference
 
 import numpy as np
 
-from ..color.colorconv import lab2lch, _cart2polar_2pi
+from .colorconv import lab2lch, _cart2polar_2pi
 
 
 def deltaE_cie76(lab1, lab2):

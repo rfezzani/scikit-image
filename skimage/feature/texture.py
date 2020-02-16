@@ -3,12 +3,11 @@ Methods to characterize image textures.
 """
 
 import numpy as np
-import warnings
+
 from .._shared.utils import check_nD
-from ..util import img_as_float
-from ..color import gray2rgb
-from ._texture import (_glcm_loop,
-                       _local_binary_pattern,
+from ..util.dtype import img_as_float
+from .._color.colorconv import gray2rgb
+from ._texture import (_glcm_loop, _local_binary_pattern,
                        _multiblock_lbp)
 
 

@@ -9,17 +9,17 @@ from .. import imread, imsave, use_plugin, reset_plugins
 from PIL import Image
 from .._plugins.pil_plugin import (
     pil_to_ndarray, ndarray_to_pil, _palette_is_grayscale)
-from ...color import rgb2lab
+from ..._color.colorconv import rgb2lab
 
-from skimage._shared import testing
-from skimage._shared.testing import (mono_check, color_check,
-                                     assert_equal, assert_array_equal,
-                                     assert_array_almost_equal,
-                                     assert_allclose)
-from skimage._shared._warnings import expected_warnings
-from skimage._shared._tempfile import temporary_file
+from ..._shared import testing
+from ..._shared.testing import (mono_check, color_check, assert_equal,
+                                assert_array_equal,
+                                assert_array_almost_equal,
+                                assert_allclose)
+from ..._shared._warnings import expected_warnings
+from ..._shared._tempfile import temporary_file
 
-from skimage.metrics import structural_similarity
+from ...metrics import structural_similarity
 
 
 def setup():

@@ -2,8 +2,8 @@ import numpy as np
 
 import scipy.ndimage as ndi
 
-from ..util import img_as_float
-from ..color import rgb2lab
+from ..util.dtype import img_as_float
+from .._color.colorconv import rgb2lab
 
 from ._quickshift_cy import _quickshift_cython
 

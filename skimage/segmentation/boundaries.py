@@ -1,9 +1,9 @@
-
 import numpy as np
 from scipy import ndimage as ndi
 from ..morphology import dilation, erosion, square
-from ..util import img_as_float, view_as_windows
-from ..color import gray2rgb
+from ..util.dtype import img_as_float
+from ..util.shape import view_as_windows
+from .._color.colorconv import gray2rgb
 
 
 def _find_boundaries_subpixel(label_img):

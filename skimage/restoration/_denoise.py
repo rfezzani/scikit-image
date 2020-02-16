@@ -5,8 +5,7 @@ from .. import img_as_float
 from ._denoise_cy import _denoise_bilateral, _denoise_tv_bregman
 from .._shared.utils import warn
 import pywt
-import skimage.color as color
-from skimage.color.colorconv import ycbcr_from_rgb
+from .._color.colorconv import ycbcr_from_rgb, rgb2ycbcr, ycbcr2rgb
 import numbers
 
 
@@ -810,7 +809,7 @@ def denoise_wavelet(image, sigma=None, wavelet='db1', mode='soft',
                                                        rescale_sigma)
     if multichannel:
         if convert2ycbcr:
-            out = color.rgb2ycbcr(image)
+            out = rgb2ycbcr(image)
             # convert user-supplied sigmas to the new colorspace as well
             if rescale_sigma:
                 sigma = _rescale_sigma_rgb2ycbcr(sigma)
@@ -835,7 +834,7 @@ def denoise_wavelet(image, sigma=None, wavelet='db1', mode='soft',
                                               rescale_sigma=rescale_sigma)
                 out[..., i] = out[..., i] * scale_factor
                 out[..., i] += _min
-            out = color.ycbcr2rgb(out)
+            out = ycbcr2rgb(out)
         else:
             out = np.empty_like(image)
             for c in range(image.shape[-1]):

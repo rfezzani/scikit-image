@@ -1,14 +1,15 @@
 import numpy as np
 from numpy import testing
-
-from skimage import data, color
-from skimage.util import img_as_bool
-from skimage.morphology import binary, grey, selem
 from scipy import ndimage as ndi
-
 import pytest
 
-img = color.rgb2gray(data.astronaut())
+from ..._color.colorconv import rgb2gray
+from ...data import astronaut
+from ...util import img_as_bool
+from ...morphology import binary, grey, selem
+
+
+img = rgb2gray(astronaut())
 bw_img = img > 100 / 255.
 
 

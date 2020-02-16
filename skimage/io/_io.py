@@ -1,10 +1,10 @@
 import numpy as np
 
-from ..io.manage_plugins import call_plugin
-from ..color import rgb2gray
-from .util import file_or_url_context
+from .._color.colorconv import rgb2gray
 from ..exposure import is_low_contrast
 from .._shared.utils import warn
+from .manage_plugins import call_plugin
+from .util import file_or_url_context
 
 
 __all__ = ['imread', 'imsave', 'imshow', 'show',

@@ -9,37 +9,38 @@ Authors
 """
 
 import os.path
+import colorsys
 
 import numpy as np
-from skimage._shared.testing import assert_equal, assert_almost_equal
-from skimage._shared.testing import assert_array_almost_equal
-from skimage._shared.testing import TestCase
+from ..._shared.testing import assert_equal, assert_almost_equal
+from ..._shared.testing import assert_array_almost_equal
+from ..._shared.testing import TestCase
 
-from skimage.util import img_as_float, img_as_ubyte, img_as_float32
-from skimage.io import imread
-from skimage.color import (rgb2hsv, hsv2rgb,
-                           rgb2xyz, xyz2rgb,
-                           rgb2hed, hed2rgb,
-                           separate_stains,
-                           combine_stains,
-                           rgb2rgbcie, rgbcie2rgb,
-                           convert_colorspace,
-                           rgb2gray, gray2rgb,
-                           xyz2lab, lab2xyz,
-                           lab2rgb, rgb2lab,
-                           xyz2luv, luv2xyz,
-                           luv2rgb, rgb2luv,
-                           lab2lch, lch2lab,
-                           rgb2yuv, yuv2rgb,
-                           rgb2yiq, yiq2rgb,
-                           rgb2ypbpr, ypbpr2rgb,
-                           rgb2ycbcr, ycbcr2rgb,
-                           rgb2ydbdr, ydbdr2rgb,
-                           rgba2rgb)
+from ...util import img_as_float, img_as_ubyte, img_as_float32
+from ...io import imread
+from ... import data_dir
+from ..._shared._warnings import expected_warnings
 
-from skimage import data_dir
-from skimage._shared._warnings import expected_warnings
-import colorsys
+from ..colorconv import (rgb2hsv, hsv2rgb,
+                         rgb2xyz, xyz2rgb,
+                         rgb2hed, hed2rgb,
+                         separate_stains,
+                         combine_stains,
+                         rgb2rgbcie, rgbcie2rgb,
+                         convert_colorspace,
+                         rgb2gray, gray2rgb,
+                         xyz2lab, lab2xyz,
+                         lab2rgb, rgb2lab,
+                         xyz2luv, luv2xyz,
+                         luv2rgb, rgb2luv,
+                         lab2lch, lch2lab,
+                         rgb2yuv, yuv2rgb,
+                         rgb2yiq, yiq2rgb,
+                         rgb2ypbpr, ypbpr2rgb,
+                         rgb2ycbcr, ycbcr2rgb,
+                         rgb2ydbdr, ydbdr2rgb,
+                         rgba2rgb,
+                         hdx_from_rgb, rgb_from_hdx)
 
 
 class TestColorconv(TestCase):
@@ -207,7 +208,6 @@ class TestColorconv(TestCase):
 
     # RGB<->HDX roundtrip with ubyte image
     def test_hdx_rgb_roundtrip(self):
-        from skimage.color.colorconv import hdx_from_rgb, rgb_from_hdx
         img_rgb = self.img_rgb
         conv = combine_stains(separate_stains(img_rgb, hdx_from_rgb),
                               rgb_from_hdx)
@@ -215,7 +215,6 @@ class TestColorconv(TestCase):
 
     # RGB<->HDX roundtrip with float image
     def test_hdx_rgb_roundtrip_float(self):
-        from skimage.color.colorconv import hdx_from_rgb, rgb_from_hdx
         img_rgb = img_as_float(self.img_rgb)
         conv = combine_stains(separate_stains(img_rgb, hdx_from_rgb),
                               rgb_from_hdx)
