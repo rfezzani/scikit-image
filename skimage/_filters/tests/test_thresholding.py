@@ -8,22 +8,20 @@ from skimage.color import rgb2gray
 from skimage.draw import circle
 from skimage._shared._warnings import expected_warnings
 from skimage.exposure import histogram
-from skimage.filters.thresholding import (threshold_local,
-                                          threshold_otsu,
-                                          threshold_li,
-                                          threshold_yen,
-                                          threshold_isodata,
-                                          threshold_niblack,
-                                          threshold_sauvola,
-                                          threshold_mean,
-                                          threshold_triangle,
-                                          threshold_minimum,
-                                          threshold_multiotsu,
-                                          try_all_threshold,
-                                          _mean_std,
-                                          _cross_entropy)
-from skimage.filters._multiotsu import (_get_multiotsu_thresh_indices_lut,
-                                        _get_multiotsu_thresh_indices)
+from ..thresholding import (threshold_local, threshold_otsu,
+                            threshold_li,
+                            threshold_yen,
+                            threshold_isodata,
+                            threshold_niblack,
+                            threshold_sauvola,
+                            threshold_mean,
+                            threshold_triangle,
+                            threshold_minimum,
+                            threshold_multiotsu,
+                            try_all_threshold,
+                            _mean_std, _cross_entropy)
+from .._multiotsu import (_get_multiotsu_thresh_indices_lut,
+                          _get_multiotsu_thresh_indices)
 from skimage._shared import testing
 from skimage._shared.testing import assert_equal, assert_almost_equal
 from skimage._shared.testing import assert_array_equal

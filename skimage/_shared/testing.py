@@ -9,6 +9,7 @@ import threading
 import functools
 from tempfile import NamedTemporaryFile
 
+import pytest
 import numpy as np
 from numpy import testing
 from numpy.testing import (assert_array_equal, assert_array_almost_equal,
@@ -19,9 +20,9 @@ from numpy.testing import (assert_array_equal, assert_array_almost_equal,
 
 import warnings
 
-from .. import data, io
-from ..util import img_as_uint, img_as_float, img_as_int, img_as_ubyte
-import pytest
+from ..io._io import imread, imsave
+from ..data import chelsea, moon
+from ..util.dtype import img_as_uint, img_as_float, img_as_int, img_as_ubyte
 from ._warnings import expected_warnings
 
 
@@ -107,8 +108,8 @@ def roundtrip(image, plugin, suffix):
     temp_file = NamedTemporaryFile(suffix=suffix, delete=False)
     fname = temp_file.name
     temp_file.close()
-    io.imsave(fname, image, plugin=plugin)
-    new = io.imread(fname, plugin=plugin)
+    imsave(fname, image, plugin=plugin)
+    new = imread(fname, plugin=plugin)
     try:
         os.remove(fname)
     except Exception:
@@ -122,7 +123,7 @@ def color_check(plugin, fmt='png'):
     All major input types should be handled as ubytes and read
     back correctly.
     """
-    img = img_as_ubyte(data.chelsea())
+    img = img_as_ubyte(chelsea())
     r1 = roundtrip(img, plugin, fmt)
     testing.assert_allclose(img, r1)
 
@@ -154,7 +155,7 @@ def mono_check(plugin, fmt='png'):
     All major input types should be handled.
     """
 
-    img = img_as_ubyte(data.moon())
+    img = img_as_ubyte(moon())
     r1 = roundtrip(img, plugin, fmt)
     testing.assert_allclose(img, r1)
 

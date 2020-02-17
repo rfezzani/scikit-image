@@ -1,7 +1,7 @@
 import pytest
 
 import numpy as np
-from skimage.filters._gaussian import gaussian, _guess_spatial_dimensions
+from skimage._filters._gaussian import gaussian, _guess_spatial_dimensions
 from skimage._shared import testing
 from skimage._shared._warnings import expected_warnings
 

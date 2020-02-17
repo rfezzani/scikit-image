@@ -1,19 +1,39 @@
 import os
 import pytest
 import numpy as np
-from skimage._shared.testing import (assert_equal, assert_array_equal,
-                                     assert_allclose)
-from skimage._shared import testing
+from ...._shared.testing import (assert_equal, assert_array_equal,
+                                 assert_allclose, test_parallel,
+                                 parametrize, raises)
 
-import skimage
-from skimage.util import img_as_ubyte, img_as_float
-from skimage import data, util, morphology
-from skimage.morphology import grey, disk
-from skimage.filters import rank
-from skimage.filters.rank import __all__ as all_rank_filters
-from skimage.filters.rank import subtract_mean
-from skimage._shared._warnings import expected_warnings
-from skimage._shared.testing import test_parallel, parametrize
+from ....util.dtype import img_as_ubyte, img_as_float
+from ....data import camera, data_dir
+from ....morphology.selem import disk
+from ....morphology import grey
+from ..generic import (autolevel, bottomhat, equalize, gradient,
+                       maximum, mean, geometric_mean, subtract_mean,
+                       median, minimum, modal, enhance_contrast, pop,
+                       threshold, tophat, noise_filter, entropy, otsu,
+                       sum, windowed_histogram, majority)
+from .._percentile import (autolevel_percentile, gradient_percentile,
+                           mean_percentile, subtract_mean_percentile,
+                           enhance_contrast_percentile, percentile,
+                           pop_percentile, sum_percentile, threshold_percentile)
+from ..bilateral import mean_bilateral, pop_bilateral, sum_bilateral
+from ...._shared._warnings import expected_warnings
+
+
+all_rank_filters = [autolevel, bottomhat, equalize, gradient, maximum,
+                    mean, geometric_mean, subtract_mean, median,
+                    minimum, modal, enhance_contrast, pop,
+                    threshold, tophat, noise_filter, entropy, otsu,
+                    sum, windowed_histogram, majority,
+                    autolevel_percentile, gradient_percentile,
+                    mean_percentile, subtract_mean_percentile,
+                    enhance_contrast_percentile, percentile,
+                    pop_percentile, sum_percentile,
+                    threshold_percentile, mean_bilateral,
+                    pop_bilateral, sum_bilateral]
+
 
 # To be removed along with tophat and bottomhat functions.
 all_rank_filters.remove('tophat')
@@ -22,7 +42,7 @@ all_rank_filters.remove('bottomhat')
 
 def test_deprecation():
     selem = disk(3)
-    image = img_as_ubyte(data.camera()[:50, :50])
+    image = img_as_ubyte(camera()[:50, :50])
 
     with expected_warnings(['rank.tophat is deprecated.']):
         rank.tophat(image, selem)
@@ -91,8 +111,8 @@ class TestRank:
         self.image = np.random.rand(25, 25)
         # Set again the seed for the other tests.
         np.random.seed(0)
-        self.selem = morphology.disk(1)
-        self.refs = np.load(os.path.join(skimage.data_dir,
+        self.selem = disk(1)
+        self.refs = np.load(os.path.join(data_dir,
                                          "rank_filter_tests.npz"))
 
     @parametrize('filter', all_rank_filters)
@@ -278,14 +298,14 @@ class TestRank:
         selem = disk(20)
         image = (np.random.rand(500, 500) * 256).astype(np.uint8)
         out = image
-        with testing.raises(NotImplementedError):
+        with raises(NotImplementedError):
             rank.mean(image, selem, out=out)
 
     def test_compare_autolevels(self):
         # compare autolevel and percentile autolevel with p0=0.0 and p1=1.0
         # should returns the same arrays
 
-        image = util.img_as_ubyte(data.camera())
+        image = img_as_ubyte(camera())
 
         selem = disk(20)
         loc_autolevel = rank.autolevel(image, selem=selem)
@@ -298,7 +318,7 @@ class TestRank:
         # compare autolevel(16-bit) and percentile autolevel(16-bit) with
         # p0=0.0 and p1=1.0 should returns the same arrays
 
-        image = data.camera().astype(np.uint16) * 4
+        image = camera().astype(np.uint16) * 4
 
         selem = disk(20)
         loc_autolevel = rank.autolevel(image, selem=selem)
@@ -310,7 +330,7 @@ class TestRank:
     def test_compare_ubyte_vs_float(self):
 
         # Create signed int8 image that and convert it to uint8
-        image_uint = img_as_ubyte(data.camera()[:50, :50])
+        image_uint = img_as_ubyte(camera()[:50, :50])
         image_float = img_as_float(image_uint)
 
         methods = ['autolevel', 'equalize', 'gradient', 'threshold',
@@ -328,7 +348,7 @@ class TestRank:
         # of dynamic) should be identical
 
         # Create signed int8 image that and convert it to uint8
-        image = img_as_ubyte(data.camera())[::2, ::2]
+        image = img_as_ubyte(camera())[::2, ::2]
         image[image > 127] = 0
         image_s = image.astype(np.int8)
         image_u = img_as_ubyte(image_s)
@@ -352,7 +372,7 @@ class TestRank:
     def test_compare_8bit_vs_16bit(self, method):
         # filters applied on 8-bit image ore 16-bit image (having only real 8-bit
         # of dynamic) should be identical
-        image8 = util.img_as_ubyte(data.camera())[::2, ::2]
+        image8 = img_as_ubyte(camera())[::2, ::2]
         image16 = image8.astype(np.uint16)
         assert_equal(image8, image16)
 
@@ -595,7 +615,7 @@ class TestRank:
 
     def test_percentile_min(self):
         # check that percentile p0 = 0 is identical to local min
-        img = data.camera()
+        img = camera()
         img16 = img.astype(np.uint16)
         selem = disk(15)
         # check for 8bit
@@ -609,7 +629,7 @@ class TestRank:
 
     def test_percentile_max(self):
         # check that percentile p0 = 1 is identical to local max
-        img = data.camera()
+        img = camera()
         img16 = img.astype(np.uint16)
         selem = disk(15)
         # check for 8bit
@@ -623,7 +643,7 @@ class TestRank:
 
     def test_percentile_median(self):
         # check that percentile p0 = 0.5 is identical to local median
-        img = data.camera()
+        img = camera()
         img16 = img.astype(np.uint16)
         selem = disk(15)
         # check for 8bit
@@ -729,7 +749,7 @@ class TestRank:
         assert rank.median(a, disk(1))[1, 1] == 1
 
     def test_majority(self):
-        img = data.camera()
+        img = camera()
         elem = np.ones((3, 3), dtype=np.uint8)
         expected = rank.windowed_histogram(
             img, elem).argmax(-1).astype(np.uint8)
@@ -746,5 +766,5 @@ class TestRank:
     def test_input_boolean_dtype(self):
         image = (np.random.rand(100, 100) * 256).astype(np.bool_)
         elem = np.ones((3, 3), dtype=np.bool_)
-        with testing.raises(ValueError):
+        with raises(ValueError):
             rank.maximum(image=image, selem=elem)

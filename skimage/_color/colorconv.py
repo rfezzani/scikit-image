@@ -55,7 +55,7 @@ import numpy as np
 from warnings import warn
 from scipy import linalg
 from ..util.dtype import img_as_float, dtype_limits
-from ..filters._gaussian import _guess_spatial_dimensions
+from .._filters._gaussian import _guess_spatial_dimensions
 
 
 def guess_spatial_dimensions(image):
