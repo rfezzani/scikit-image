@@ -1,18 +1,16 @@
 import numpy as np
-from skimage import util
-import skimage.data as data
-from skimage.filters.rank import median
-from skimage.morphology import disk
-from skimage.viewer import ImageViewer, has_qt
-from skimage.viewer.plugins.base import Plugin
-from skimage.viewer.widgets import Slider
-from skimage.viewer.plugins import (
-    LineProfile, Measure, CannyPlugin, LabelPainter, Crop, ColorHistogram,
-    PlotPlugin)
-
-from skimage._shared import testing
-from skimage._shared.testing import (assert_equal, assert_allclose,
-                                     assert_almost_equal)
+from ..._shared import testing
+from ..._shared.testing import (assert_equal, assert_allclose,
+                                assert_almost_equal)
+from ... import util
+from ... import data
+from ..._filters.rank import median
+from ...morphology import disk
+from .. import ImageViewer, has_qt
+from ..plugins.base import Plugin
+from ..widgets import Slider
+from ..plugins import (LineProfile, Measure, CannyPlugin,
+                       LabelPainter, Crop, ColorHistogram, PlotPlugin)
 
 
 def setup_line_profile(image, limits='image'):
