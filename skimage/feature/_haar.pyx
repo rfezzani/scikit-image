@@ -6,8 +6,12 @@
 
 import numpy as np
 
+cimport numpy as cnp
+from libcpp.vector cimport vector
+
 from .._shared.fused_numerics cimport np_real_numeric
 from .._shared.transform cimport integrate
+
 
 FEATURE_TYPE = {'type-2-x': 0, 'type-2-y': 1,
                 'type-3-x': 2, 'type-3-y': 3,
@@ -246,6 +250,11 @@ cdef vector[vector[Rectangle]] _haar_like_feature_coord(
     return rect_feat
 
 
+cpdef inline _rect2list(Rectangle rect):
+    return [(rect.top_left.row, rect.top_left.col),
+            (rect.bottom_right.row, rect.bottom_right.col)]
+
+
 cpdef haar_like_feature_coord_wrapper(width, height, feature_type):
     """Compute the coordinates of Haar-like features.
 
@@ -291,10 +300,7 @@ tuple coord
     for j in range(n_feature):
         coord_feature = []
         for i in range(n_rectangle):
-            coord_feature.append([(rect[i][j].top_left.row,
-                                   rect[i][j].top_left.col),
-                                  (rect[i][j].bottom_right.row,
-                                   rect[i][j].bottom_right.col)])
+            coord_feature.append(_rect2list(rect[i][j]))
         output[j] = coord_feature
 
     return output, np.array([feature_type] * n_feature, dtype=object)
