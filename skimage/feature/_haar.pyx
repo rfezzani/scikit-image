@@ -18,6 +18,206 @@ N_RECTANGLE = {'type-2-x': 2, 'type-2-y': 2,
                'type-4': 4}
 
 
+cdef vector[vector[Rectangle]] _type_2_x_feature(Py_ssize_t width,
+                                                 Py_ssize_t height) nogil:
+    """Compute the coordinates of type-2-x Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Rectangle single_rect
+        vector[vector[Rectangle]] rect_feat
+        Py_ssize_t x, y, dx, dy
+
+    rect_feat = vector[vector[Rectangle]](2)
+
+    for y in range(height):
+        for x in range(width):
+            for dy in range(1, height):
+                if y + dy > height:
+                    break
+                for dx in range(1, width):
+                    if x + 2 * dx > width:
+                        break
+                    set_rectangle_feature(&single_rect,
+                                          y, x,
+                                          y + dy - 1, x + dx - 1)
+                    rect_feat[0].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y, x + dx,
+                                          y + dy - 1,
+                                          x + 2 * dx - 1)
+                    rect_feat[1].push_back(single_rect)
+    return rect_feat
+
+
+cdef vector[vector[Rectangle]] _type_2_y_feature(Py_ssize_t width,
+                                                 Py_ssize_t height) nogil:
+    """Compute the coordinates of type-2-y Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Rectangle single_rect
+        vector[vector[Rectangle]] rect_feat
+        Py_ssize_t x, y, dx, dy
+
+    rect_feat = vector[vector[Rectangle]](2)
+
+    for y in range(height):
+        for x in range(width):
+            for dy in range(1, height):
+                if y + 2 * dy > height:
+                    break
+                for dx in range(1, width):
+                    if x + dx > width:
+                        break
+                    set_rectangle_feature(&single_rect,
+                                          y, x,
+                                          y + dy - 1, x + dx - 1)
+                    rect_feat[0].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y + dy, x,
+                                          y + 2 * dy - 1, x + dx - 1)
+                    rect_feat[1].push_back(single_rect)
+    return rect_feat
+
+
+cdef vector[vector[Rectangle]] _type_3_x_feature(Py_ssize_t width,
+                                                 Py_ssize_t height) nogil:
+    """Compute the coordinates of type-3-x Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Rectangle single_rect
+        vector[vector[Rectangle]] rect_feat
+        Py_ssize_t x, y, dx, dy
+
+    rect_feat = vector[vector[Rectangle]](3)
+    for y in range(height):
+        for x in range(width):
+            for dy in range(1, height):
+                if y + dy > height:
+                    break
+                for dx in range(1, width):
+                    if x + 3 * dx > width:
+                        break
+                    set_rectangle_feature(&single_rect,
+                                          y, x,
+                                          y + dy - 1, x + dx - 1)
+                    rect_feat[0].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y, x + dx,
+                                          y + dy - 1, x + 2 * dx - 1)
+                    rect_feat[1].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y, x + 2 * dx,
+                                          y + dy - 1, x + 3 * dx - 1)
+                    rect_feat[2].push_back(single_rect)
+    return rect_feat
+
+
+cdef vector[vector[Rectangle]] _type_3_y_feature(Py_ssize_t width,
+                                                 Py_ssize_t height) nogil:
+    """Compute the coordinates of type-3-y Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Rectangle single_rect
+        vector[vector[Rectangle]] rect_feat
+        Py_ssize_t x, y, dx, dy
+
+    rect_feat = vector[vector[Rectangle]](3)
+    for y in range(height):
+        for x in range(width):
+            for dy in range(1, height):
+                if y + 3 * dy > height:
+                    break
+                for dx in range(1, width):
+                    if x + dx > width:
+                        break
+                    set_rectangle_feature(&single_rect,
+                                          y, x,
+                                          y + dy - 1, x + dx - 1)
+                    rect_feat[0].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y + dy, x,
+                                          y + 2 * dy - 1, x + dx - 1)
+                    rect_feat[1].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y + 2 * dy, x,
+                                          y + 3 * dy - 1, x + dx - 1)
+                    rect_feat[2].push_back(single_rect)
+    return rect_feat
+
+
+cdef vector[vector[Rectangle]] _type_4_feature(Py_ssize_t width,
+                                               Py_ssize_t height) nogil:
+    """Compute the coordinates of type-4 Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Rectangle single_rect
+        vector[vector[Rectangle]] rect_feat
+        Py_ssize_t x, y, dx, dy
+
+    rect_feat = vector[vector[Rectangle]](4)
+    for y in range(height):
+        for x in range(width):
+            for dy in range(1, height):
+                if y + 2 * dy > height:
+                    break
+                for dx in range(1, width):
+                    if x + 2 * dx > width:
+                        break
+                    set_rectangle_feature(&single_rect,
+                                          y, x,
+                                          y + dy - 1, x + dx - 1)
+                    rect_feat[0].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y, x + dx,
+                                          y + dy - 1, x + 2 * dx - 1)
+                    rect_feat[1].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y + dy, x,
+                                          y + 2 * dy - 1, x + dx - 1)
+                    rect_feat[3].push_back(single_rect)
+                    set_rectangle_feature(&single_rect,
+                                          y + dy, x + dx,
+                                          y + 2 * dy - 1,
+                                          x + 2 * dx - 1)
+                    rect_feat[2].push_back(single_rect)
+    return rect_feat
+
+
 cdef vector[vector[Rectangle]] _haar_like_feature_coord(
     Py_ssize_t width,
     Py_ssize_t height,
@@ -25,97 +225,23 @@ cdef vector[vector[Rectangle]] _haar_like_feature_coord(
     """Private function to compute the coordinates of all Haar-like features.
     """
     cdef:
-        Py_ssize_t max_feature = height * height * width * width
         vector[vector[Rectangle]] rect_feat
-        Rectangle single_rect
-        Py_ssize_t n_rectangle
-        Py_ssize_t x, y, dx, dy
 
-    if feature_type == 0 or feature_type == 1:
-        n_rectangle = 2
-    elif feature_type == 2 or feature_type == 3:
-        n_rectangle = 3
-    else:
-        n_rectangle = 4
-
-    # Allocate for the number of rectangle (we know from the start)
-    rect_feat = vector[vector[Rectangle]](n_rectangle)
-
-    for y in range(height):
-        for x in range(width):
-            for dy in range(1, height):
-                for dx in range(1, width):
-                    # type -> 2 rectangles split along x axis
-                    if (feature_type == 0 and
-                            (y + dy <= height and x + 2 * dx <= width)):
-                        set_rectangle_feature(&single_rect,
-                                              y, x,
-                                              y + dy - 1, x + dx - 1)
-                        rect_feat[0].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y, x + dx,
-                                              y + dy - 1, x + 2 * dx - 1)
-                        rect_feat[1].push_back(single_rect)
-                    # type -> 2 rectangles split along y axis
-                    elif (feature_type == 1 and
-                          (y + 2 * dy <= height and x + dx <= width)):
-                        set_rectangle_feature(&single_rect,
-                                              y, x,
-                                              y + dy - 1, x + dx - 1)
-                        rect_feat[0].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y + dy, x,
-                                              y + 2 * dy - 1, x + dx - 1)
-                        rect_feat[1].push_back(single_rect)
-                    # type -> 3 rectangles split along x axis
-                    elif (feature_type == 2 and
-                          (y + dy <= height and x + 3 * dx <= width)):
-                        set_rectangle_feature(&single_rect,
-                                              y, x,
-                                              y + dy - 1, x + dx - 1)
-                        rect_feat[0].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y, x + dx,
-                                              y + dy - 1, x + 2 * dx - 1)
-                        rect_feat[1].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y, x + 2 * dx,
-                                              y + dy - 1, x + 3 * dx - 1)
-                        rect_feat[2].push_back(single_rect)
-                    # type -> 3 rectangles split along y axis
-                    elif (feature_type == 3 and
-                          (y + 3 * dy <= height and x + dx <= width)):
-                        set_rectangle_feature(&single_rect,
-                                              y, x,
-                                              y + dy - 1, x + dx - 1)
-                        rect_feat[0].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y + dy, x,
-                                              y + 2 * dy - 1, x + dx - 1)
-                        rect_feat[1].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y + 2 * dy, x,
-                                              y + 3 * dy - 1, x + dx - 1)
-                        rect_feat[2].push_back(single_rect)
-                    # type -> 4 rectangles split along x and y axis
-                    elif (feature_type == 4 and
-                          (y + 2 * dy <= height and x + 2 * dx <= width)):
-                        set_rectangle_feature(&single_rect,
-                                              y, x,
-                                              y + dy - 1, x + dx - 1)
-                        rect_feat[0].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y, x + dx,
-                                              y + dy - 1, x + 2 * dx - 1)
-                        rect_feat[1].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y + dy, x,
-                                              y + 2 * dy - 1, x + dx - 1)
-                        rect_feat[3].push_back(single_rect)
-                        set_rectangle_feature(&single_rect,
-                                              y + dy, x + dx,
-                                              y + 2 * dy - 1, x + 2 * dx - 1)
-                        rect_feat[2].push_back(single_rect)
+    if feature_type == 0:
+        # type -> 2 rectangles split along x axis
+        rect_feat = _type_2_x_feature(width, height)
+    elif feature_type == 1:
+        # type -> 2 rectangles split along y axis
+        rect_feat = _type_2_y_feature(width, height)
+    elif feature_type == 2:
+        # type -> 3 rectangles split along x axis
+        rect_feat = _type_3_x_feature(width, height)
+    elif feature_type == 3:
+        # type -> 3 rectangles split along y axis
+        rect_feat = _type_3_y_feature(width, height)
+    elif feature_type == 4:
+        # type -> 4 rectangles split along x and y axis
+        rect_feat = _type_4_feature(width, height)
 
     return rect_feat
 
