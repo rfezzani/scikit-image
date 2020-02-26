@@ -1,18 +1,6 @@
-import cython
 from libcpp.vector cimport vector
 cimport numpy as cnp
-
-
-ctypedef fused integral_floating:
-    cnp.uint8_t
-    cnp.uint16_t
-    cnp.uint32_t
-    cnp.uint64_t
-    cnp.int8_t
-    cnp.int16_t
-    cnp.int32_t
-    cnp.int64_t
-    cython.floating
+from .._shared.fused_numerics cimport np_real_numeric
 
 
 cdef struct Point2D:
@@ -45,13 +33,13 @@ cdef vector[vector[Rectangle]] _haar_like_feature_coord(
 cpdef haar_like_feature_coord_wrapper(width, height, feature_type)
 
 
-cdef integral_floating[:, ::1] _haar_like_feature(
-    integral_floating[:, ::1] int_image,
+cdef np_real_numeric[:, ::1] _haar_like_feature(
+    np_real_numeric[:, ::1] int_image,
     vector[vector[Rectangle]] coord,
     Py_ssize_t n_rectangle, Py_ssize_t n_feature)
 
 
 cpdef haar_like_feature_wrapper(
-    cnp.ndarray[integral_floating, ndim=2] int_image,
+    cnp.ndarray[np_real_numeric, ndim=2] int_image,
     r, c, width, height, feature_type,
     feature_coord)
