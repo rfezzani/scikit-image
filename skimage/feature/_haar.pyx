@@ -37,22 +37,32 @@ cdef vector[vector[Rectangle]] _type_2_x_feature(Py_ssize_t width,
         Rectangle single_rect
         vector[vector[Rectangle]] rect_feat
         Py_ssize_t x, y, dx, dy
+        size_t idx, rect_count, half_w
+
+    half_w = width // 2
+    rect_count = ((height * (height + 1) / 2 - 1)
+                  * (half_w * (half_w + 1)
+                     - (1 - (width % 2)) * half_w))
 
     rect_feat = vector[vector[Rectangle]](2)
+    rect_feat[0] = vector[Rectangle](rect_count)
+    rect_feat[1] = vector[Rectangle](rect_count)
 
+    idx = 0
     for y in range(height):
-        for x in range(width):
+        for x in range(width - 1):
             for dy in range(height - max(y, 1)):
                 for dx in range((width - x) // 2):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)
-                    rect_feat[0].push_back(single_rect)
+                    rect_feat[0][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y, x + dx + 1,
                                           y + dy,
                                           x + 2 * dx + 1)
-                    rect_feat[1].push_back(single_rect)
+                    rect_feat[1][idx] = single_rect
+                    idx += 1
     return rect_feat
 
 
@@ -71,21 +81,31 @@ cdef vector[vector[Rectangle]] _type_2_y_feature(Py_ssize_t width,
         Rectangle single_rect
         vector[vector[Rectangle]] rect_feat
         Py_ssize_t x, y, dx, dy
+        size_t idx, rect_count, half_h
+
+    half_h = height // 2
+    rect_count = ((width * (width + 1) / 2 - 1)
+                  * (half_h * (half_h + 1)
+                     - (1 - (height % 2)) * half_h))
 
     rect_feat = vector[vector[Rectangle]](2)
+    rect_feat[0] = vector[Rectangle](rect_count)
+    rect_feat[1] = vector[Rectangle](rect_count)
 
-    for y in range(height):
+    idx = 0
+    for y in range(height - 1):
         for x in range(width):
             for dy in range((height - y) // 2):
                 for dx in range(width - max(x, 1)):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)
-                    rect_feat[0].push_back(single_rect)
+                    rect_feat[0][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y + dy + 1, x,
                                           y + 2 * dy + 1, x + dx)
-                    rect_feat[1].push_back(single_rect)
+                    rect_feat[1][idx] = single_rect
+                    idx += 1
     return rect_feat
 
 
@@ -104,24 +124,36 @@ cdef vector[vector[Rectangle]] _type_3_x_feature(Py_ssize_t width,
         Rectangle single_rect
         vector[vector[Rectangle]] rect_feat
         Py_ssize_t x, y, dx, dy
+        size_t idx, rect_count, third_w
+
+    third_w = width // 3
+    rect_count = ((height * (height + 1) / 2 - 1)
+                  * (3 * third_w * (third_w + 1) / 2
+                     - (2 - (width % 3)) * third_w))
 
     rect_feat = vector[vector[Rectangle]](3)
+    rect_feat[0] = vector[Rectangle](rect_count)
+    rect_feat[1] = vector[Rectangle](rect_count)
+    rect_feat[2] = vector[Rectangle](rect_count)
+
+    idx = 0
     for y in range(height):
-        for x in range(width):
+        for x in range(width - 2):
             for dy in range(height - max(y, 1)):
                 for dx in range((width - x) // 3):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)
-                    rect_feat[0].push_back(single_rect)
+                    rect_feat[0][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y, x + dx + 1,
                                           y + dy, x + 2 * dx + 1)
-                    rect_feat[1].push_back(single_rect)
+                    rect_feat[1][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y, x + 2 * dx + 2,
                                           y + dy, x + 3 * dx + 2)
-                    rect_feat[2].push_back(single_rect)
+                    rect_feat[2][idx] = single_rect
+                    idx += 1
     return rect_feat
 
 
@@ -140,24 +172,36 @@ cdef vector[vector[Rectangle]] _type_3_y_feature(Py_ssize_t width,
         Rectangle single_rect
         vector[vector[Rectangle]] rect_feat
         Py_ssize_t x, y, dx, dy
+        size_t idx, rect_count, third_h
+
+    third_h = height // 3
+    rect_count = ((width * (width + 1) / 2 - 1)
+                  * (3 * third_h * (third_h + 1) / 2
+                     - (2 - (height % 3)) * third_h))
 
     rect_feat = vector[vector[Rectangle]](3)
-    for y in range(height):
+    rect_feat[0] = vector[Rectangle](rect_count)
+    rect_feat[1] = vector[Rectangle](rect_count)
+    rect_feat[2] = vector[Rectangle](rect_count)
+
+    idx = 0
+    for y in range(height - 2):
         for x in range(width):
             for dy in range((height - y) // 3):
                 for dx in range(width - max(1, x)):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)
-                    rect_feat[0].push_back(single_rect)
+                    rect_feat[0][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y + dy + 1, x,
                                           y + 2 * dy + 1, x + dx)
-                    rect_feat[1].push_back(single_rect)
+                    rect_feat[1][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y + 2 * dy + 2, x,
                                           y + 3 * dy + 2, x + dx)
-                    rect_feat[2].push_back(single_rect)
+                    rect_feat[2][idx] = single_rect
+                    idx += 1
     return rect_feat
 
 
@@ -176,29 +220,45 @@ cdef vector[vector[Rectangle]] _type_4_feature(Py_ssize_t width,
         Rectangle single_rect
         vector[vector[Rectangle]] rect_feat
         Py_ssize_t x, y, dx, dy
+        size_t idx, rect_count, half_h, half_w
+
+
+    half_w = width // 2
+    half_h = height // 2
+    rect_count = ((half_h * (half_h + 1)
+                   - (1 - (height % 2)) * half_h)
+                  * (half_w * (half_w + 1)
+                     - (1 - (width % 2)) * half_w))
 
     rect_feat = vector[vector[Rectangle]](4)
-    for y in range(height):
-        for x in range(width):
+    rect_feat[0] = vector[Rectangle](rect_count)
+    rect_feat[1] = vector[Rectangle](rect_count)
+    rect_feat[2] = vector[Rectangle](rect_count)
+    rect_feat[3] = vector[Rectangle](rect_count)
+
+    idx = 0
+    for y in range(height - 1):
+        for x in range(width - 1):
             for dy in range((height - y) // 2):
                 for dx in range((width - x) // 2):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)
-                    rect_feat[0].push_back(single_rect)
+                    rect_feat[0][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y, x + dx + 1,
                                           y + dy, x + 2 * dx + 1)
-                    rect_feat[1].push_back(single_rect)
+                    rect_feat[1][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y + dy + 1, x,
                                           y + 2 * dy + 1, x + dx)
-                    rect_feat[3].push_back(single_rect)
+                    rect_feat[3][idx] = single_rect
                     set_rectangle_feature(&single_rect,
                                           y + dy + 1, x + dx + 1,
                                           y + 2 * dy + 1,
                                           x + 2 * dx + 1)
-                    rect_feat[2].push_back(single_rect)
+                    rect_feat[2][idx] = single_rect
+                    idx += 1
     return rect_feat
 
 
