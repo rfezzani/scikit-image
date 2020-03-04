@@ -31,6 +31,42 @@ cdef inline void _set_roi( Py_ssize_t[:, ::1] rect,
     rect[1, 1] = j1
 
 
+cdef inline void _set_type_2_x_roi(Py_ssize_t[:, :, ::1] rect_coord,
+                                   Py_ssize_t y,
+                                   Py_ssize_t start_idx,
+                                   Py_ssize_t end_idx,
+                                   Py_ssize_t width,
+                                   Py_ssize_t height) nogil:
+    """Compute the ROI coordinates of type-2-x Haar-like features.
+
+    Parameters
+    ----------
+    feat_idx : ndarray
+        Indices of the desired ROI.
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, dx, dy, current_idx
+
+    current_idx = start_idx
+
+    for x in range(width - 1):
+        for dy in range(height - y):
+            for dx in range((width - x) // 2):
+                if current_idx == end_idx:
+                    _set_roi(rect_coord[0, ...],
+                             y, x,
+                             y + dy, x + dx)
+                    _set_roi(rect_coord[1, ...],
+                             y, x + dx + 1,
+                             y + dy, x + 2 * dx + 1)
+                    return
+                current_idx += 1
+
+
 def get_type_2_x_roi_from_idx(Py_ssize_t[::1] feat_idx, Py_ssize_t width,
                               Py_ssize_t height):
     """Compute the ROI coordinates of type-2-x Haar-like features.
@@ -60,23 +96,11 @@ def get_type_2_x_roi_from_idx(Py_ssize_t[::1] feat_idx, Py_ssize_t width,
 
             end_idx = feat_idx[idx]
             y = end_idx // rect_per_y
-            current_idx = y * rect_per_y
+            start_idx = y * rect_per_y
 
-            for x in range(width - 1):
-                if current_idx > end_idx:
-                    break
-                for dy in range(height - y):
-                    for dx in range((width - x) // 2):
-                        if current_idx == end_idx:
-                            _set_roi(rect_coord[idx, 0, ...],
-                                     y, x,
-                                     y + dy, x + dx)
-                            _set_roi(rect_coord[idx, 1, ...],
-                                     y, x + dx + 1,
-                                     y + dy, x + 2 * dx + 1)
-                            current_idx += 1
-                            break
-                        current_idx += 1
+            _set_type_2_x_roi(rect_coord[idx, ...], y,
+                              start_idx, end_idx, width,
+                              height)
 
     return np.asarray(rect_coord)
 
