@@ -31,6 +31,56 @@ cdef inline void _set_roi( Py_ssize_t[:, ::1] rect,
     rect[1, 1] = j1
 
 
+def get_type_2_x_roi_from_idx(Py_ssize_t[::1] feat_idx, Py_ssize_t width,
+                              Py_ssize_t height):
+    """Compute the ROI coordinates of type-2-x Haar-like features.
+
+    Parameters
+    ----------
+    feat_idx : ndarray
+        Indices of the desired ROI.
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, y, dx, dy, rect_per_y, half_w, rect_count
+        Py_ssize_t current_idx, end_idx, idx
+        Py_ssize_t[:, :, :, ::1] rect_coord
+
+    rect_count = feat_idx.shape[0]
+    half_w = width // 2
+    rect_per_y = (half_w * (half_w + 1) - (1 - (width % 2)) * half_w)
+
+    rect_coord = np.empty((rect_count, 2, 2, 2), dtype=np.int)
+
+    with nogil:
+        for idx in range(rect_count):
+
+            end_idx = feat_idx[idx]
+            y = end_idx // rect_per_y
+            current_idx = y * rect_per_y
+
+            for x in range(width - 1):
+                if current_idx > end_idx:
+                    break
+                for dy in range(height - y):
+                    for dx in range((width - x) // 2):
+                        if current_idx == end_idx:
+                            _set_roi(rect_coord[idx, 0, ...],
+                                     y, x,
+                                     y + dy, x + dx)
+                            _set_roi(rect_coord[idx, 1, ...],
+                                     y, x + dx + 1,
+                                     y + dy, x + 2 * dx + 1)
+                            current_idx += 1
+                            break
+                        current_idx += 1
+
+    return np.asarray(rect_coord)
+
+
 def get_type_2_x_roi(Py_ssize_t width, Py_ssize_t height):
     """Compute the coordinates of type-2-x Haar-like features.
 
@@ -50,7 +100,7 @@ def get_type_2_x_roi(Py_ssize_t width, Py_ssize_t height):
                   * (half_w * (half_w + 1)
                      - (1 - (width % 2)) * half_w))
 
-    rect_feat = np.empty((2, rect_count, 2, 2), dtype=np.int)
+    rect_feat = np.empty((rect_count, 2, 2, 2), dtype=np.int)
 
     with nogil:
         idx = 0
@@ -58,10 +108,10 @@ def get_type_2_x_roi(Py_ssize_t width, Py_ssize_t height):
             for x in range(width - 1):
                 for dy in range(height - y):
                     for dx in range((width - x) // 2):
-                        _set_roi(rect_feat[0, idx, ...],
+                        _set_roi(rect_feat[idx, 0, ...],
                                  y, x,
                                  y + dy, x + dx)
-                        _set_roi(rect_feat[1, idx, ...],
+                        _set_roi(rect_feat[idx, 1, ...],
                                  y, x + dx + 1,
                                  y + dy, x + 2 * dx + 1)
                         idx += 1
@@ -87,7 +137,7 @@ def get_type_2_y_roi(Py_ssize_t width, Py_ssize_t height):
                   * (half_h * (half_h + 1)
                      - (1 - (height % 2)) * half_h))
 
-    rect_feat = np.empty((2, rect_count, 2, 2), dtype=np.int)
+    rect_feat = np.empty((rect_count, 2, 2, 2), dtype=np.int)
 
     with nogil:
         idx = 0
@@ -95,10 +145,10 @@ def get_type_2_y_roi(Py_ssize_t width, Py_ssize_t height):
             for x in range(width):
                 for dy in range((height - y) // 2):
                     for dx in range(width - x):
-                        _set_roi(rect_feat[0, idx, ...],
+                        _set_roi(rect_feat[idx, 0, ...],
                                  y, x,
                                  y + dy, x + dx)
-                        _set_roi(rect_feat[1, idx, ...],
+                        _set_roi(rect_feat[idx, 1, ...],
                                  y, x + dx + 1,
                                  y + 2 * dy + 1, x + dx)
                         idx += 1
@@ -124,7 +174,7 @@ def get_type_3_x_roi(Py_ssize_t width, Py_ssize_t height):
                   * (3 * third_w * (third_w + 1) / 2
                      - (2 - (width % 3)) * third_w))
 
-    rect_feat = np.empty((3, rect_count, 2, 2), dtype=np.int)
+    rect_feat = np.empty((rect_count, 3, 2, 2), dtype=np.int)
 
     with nogil:
         idx = 0
@@ -132,13 +182,13 @@ def get_type_3_x_roi(Py_ssize_t width, Py_ssize_t height):
             for x in range(width - 2):
                 for dy in range(height - y):
                     for dx in range((width - x) // 3):
-                        _set_roi(rect_feat[0, idx, ...],
+                        _set_roi(rect_feat[idx, 0, ...],
                                  y, x,
                                  y + dy, x + dx)
-                        _set_roi(rect_feat[1, idx, ...],
+                        _set_roi(rect_feat[idx, 1, ...],
                                  y, x + dx + 1,
                                  y + dy, x + 2 * dx + 1)
-                        _set_roi(rect_feat[2, idx, ...],
+                        _set_roi(rect_feat[idx, 2, ...],
                                  y, x + 2 * dx + 2,
                                  y + dy, x + 3 * dx + 2)
                         idx += 1
@@ -164,7 +214,7 @@ def get_type_3_y_roi(Py_ssize_t width, Py_ssize_t height):
                   * (3 * third_h * (third_h + 1) / 2
                      - (2 - (height % 3)) * third_h))
 
-    rect_feat = np.empty((3, rect_count, 2, 2), dtype=np.int)
+    rect_feat = np.empty((rect_count, 3, 2, 2), dtype=np.int)
 
     with nogil:
         idx = 0
@@ -172,13 +222,13 @@ def get_type_3_y_roi(Py_ssize_t width, Py_ssize_t height):
             for x in range(width):
                 for dy in range((height - y) // 3):
                     for dx in range(width - x):
-                        _set_roi(rect_feat[0, idx, ...],
+                        _set_roi(rect_feat[idx, 0, ...],
                                  y, x,
                                  y + dy, x + dx)
-                        _set_roi(rect_feat[1, idx, ...],
+                        _set_roi(rect_feat[idx, 1, ...],
                                  y + dy + 1, x,
                                  y + 2 * dy + 1, x + dx)
-                        _set_roi(rect_feat[2, idx, ...],
+                        _set_roi(rect_feat[idx, 2, ...],
                                  y + 2 * dy + 2, x,
                                  y + 3 * dy + 2, x + dx)
                         idx += 1
@@ -207,7 +257,7 @@ def get_type_4_roi(Py_ssize_t width, Py_ssize_t height):
                   * (half_w * (half_w + 1)
                      - (1 - (width % 2)) * half_w))
 
-    rect_feat = np.empty((4, rect_count, 2, 2), dtype=np.int)
+    rect_feat = np.empty((rect_count, 4, 2, 2), dtype=np.int)
 
     with nogil:
         idx = 0
@@ -215,16 +265,16 @@ def get_type_4_roi(Py_ssize_t width, Py_ssize_t height):
             for x in range(width - 1):
                 for dy in range((height - y) // 2):
                     for dx in range((width - x) // 2):
-                        _set_roi(rect_feat[0, idx, ...],
+                        _set_roi(rect_feat[idx, 0, ...],
                                  y, x,
                                  y + dy, x + dx)
-                        _set_roi(rect_feat[1, idx, ...],
+                        _set_roi(rect_feat[idx, 1, ...],
                                  y, x + dx + 1,
                                  y + dy, x + 2 * dx + 1)
-                        _set_roi(rect_feat[2, idx, ...],
+                        _set_roi(rect_feat[idx, 2, ...],
                                  y + dy + 1, x + dx + 1,
                                  y + 2 * dy + 1, x + 2 * dx + 1)
-                        _set_roi(rect_feat[3, idx, ...],
+                        _set_roi(rect_feat[idx, 3, ...],
                                  y + dy + 1, x,
                                  y + 2 * dy + 1, x + dx)
                         idx += 1

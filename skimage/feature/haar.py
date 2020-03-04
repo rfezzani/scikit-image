@@ -9,7 +9,7 @@ from .._shared.utils import check_random_state
 from ..util.dtype import img_as_float
 from ._haar import (haar_like_feature_coord_wrapper, haar_like_feature_wrapper,
                     get_type_2_x_roi, get_type_2_y_roi, get_type_3_x_roi,
-                    get_type_3_y_roi, get_type_4_roi)
+                    get_type_3_y_roi, get_type_4_roi, get_type_2_x_roi_from_idx)
 
 
 FEATURE_TYPE = ('type-2-x', 'type-2-y',
