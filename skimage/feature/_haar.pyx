@@ -105,6 +105,44 @@ def get_type_2_x_roi_from_idx(Py_ssize_t[::1] feat_idx, Py_ssize_t width,
     return np.asarray(rect_coord)
 
 
+def get_type_2_x_feature(np_real_numeric[:, ::1] int_image,
+                         Py_ssize_t width, Py_ssize_t height):
+    """Compute the coordinates of type-2-x Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, y, dx, dy, idx, rect_count, half_w
+        Py_ssize_t[:, :, :, ::1] rect_feat
+
+    half_w = width // 2
+    rect_count = ((height * (height + 1) / 2)
+                  * (half_w * (half_w + 1)
+                     - (1 - (width % 2)) * half_w))
+
+    rect_feat = np.empty((rect_count, 2), dtype=np.int)
+
+    with nogil:
+        idx = 0
+        for y in range(height):
+            for x in range(width - 1):
+                for dy in range(height - y):
+                    for dx in range((width - x) // 2):
+                        rect_feat[idx, 0] = integrate(int_image,
+                                                      y, x,
+                                                      y + dy, x + dx)
+                        rect_feat[idx, 1] = integrate(int_image,
+                                                      y, x + dx + 1,
+                                                      y + dy, x + 2 * dx + 1)
+                        idx += 1
+    return np.asarray(rect_feat)
+
+
 def get_type_2_x_roi(Py_ssize_t width, Py_ssize_t height):
     """Compute the coordinates of type-2-x Haar-like features.
 
