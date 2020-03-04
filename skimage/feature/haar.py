@@ -7,11 +7,21 @@ from ..color.colorconv import gray2rgb
 from ..draw.draw import rectangle
 from .._shared.utils import check_random_state
 from ..util.dtype import img_as_float
-from ._haar import haar_like_feature_coord_wrapper, haar_like_feature_wrapper
+from ._haar import (haar_like_feature_coord_wrapper, haar_like_feature_wrapper,
+                    get_type_2_x_roi, get_type_2_y_roi, get_type_3_x_roi,
+                    get_type_3_y_roi, get_type_4_roi)
+
 
 FEATURE_TYPE = ('type-2-x', 'type-2-y',
                 'type-3-x', 'type-3-y',
                 'type-4')
+
+
+COORD_FUNC = {'type-2-x': get_type_2_x_roi,
+              'type-2-y': get_type_2_y_roi,
+              'type-3-x': get_type_3_x_roi,
+              'type-3-y': get_type_3_y_roi,
+              'type-4': get_type_4_roi}
 
 
 def _validate_feature_type(feature_type):
@@ -22,13 +32,60 @@ def _validate_feature_type(feature_type):
         if isinstance(feature_type, str):
             feature_type_ = [feature_type]
         else:
-            feature_type_ = feature_type
+            feature_type_ = set(feature_type)
         for feat_t in feature_type_:
             if feat_t not in FEATURE_TYPE:
                 raise ValueError(
                     'The given feature type is unknown. Got {} instead of one'
                     ' of {}.'.format(feat_t, FEATURE_TYPE))
     return feature_type_
+
+
+def _haar_like_feature_coord(width, height, feature_type=None):
+    """Compute the coordinates of Haar-like features.
+
+    Parameters
+    ----------
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    feature_type : str or list of str or None, optional
+        The type of feature to consider:
+
+        - 'type-2-x': 2 rectangles varying along the x axis;
+        - 'type-2-y': 2 rectangles varying along the y axis;
+        - 'type-3-x': 3 rectangles varying along the x axis;
+        - 'type-3-y': 3 rectangles varying along the y axis;
+        - 'type-4': 4 rectangles varying along x and y axis.
+
+        By default all features are extracted.
+
+    Returns
+    -------
+    feature_coord : (n_features, n_rectangles, 2, 2), ndarray of list of \
+tuple coord
+        Coordinates of the rectangles for each feature.
+    feature_type : (n_features,), ndarray of str
+        The corresponding type for each feature.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skimage.transform import integral_image
+    >>> from skimage.feature import haar_like_feature_coord
+    >>> feat_coord, feat_type = haar_like_feature_coord(2, 2, 'type-4')
+    >>> feat_coord # doctest: +SKIP
+    array([ list([[(0, 0), (0, 0)], [(0, 1), (0, 1)],
+                  [(1, 1), (1, 1)], [(1, 0), (1, 0)]])], dtype=object)
+    >>> feat_type
+    array(['type-4'], dtype=object)
+
+    """
+    feature_type_ = _validate_feature_type(feature_type)
+
+    return {f_type: COORD_FUNC[f_type](width, height)
+            for f_type in feature_type_}
 
 
 def haar_like_feature_coord(width, height, feature_type=None):
