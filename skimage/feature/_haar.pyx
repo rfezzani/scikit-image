@@ -106,11 +106,18 @@ def get_type_2_x_roi_from_idx(Py_ssize_t[::1] feat_idx, Py_ssize_t width,
 
 
 def get_type_2_x_feature(np_real_numeric[:, ::1] int_image,
+                         Py_ssize_t r, Py_ssize_t c,
                          Py_ssize_t width, Py_ssize_t height):
-    """Compute the coordinates of type-2-x Haar-like features.
+    """Compute type-2-x Haar-like features.
 
     Parameters
     ----------
+    int_image : (M, N) ndarray
+        Integral image for which the features need to be computed.
+    r : int
+        Row-coordinate of top left corner of the detection window.
+    c : int
+        Column-coordinate of top left corner of the detection window.
     width : int
         Width of the detection window.
     height : int
@@ -118,21 +125,21 @@ def get_type_2_x_feature(np_real_numeric[:, ::1] int_image,
     """
     cdef:
         Py_ssize_t x, y, dx, dy, idx, rect_count, half_w
-        Py_ssize_t[:, :, :, ::1] rect_feat
+        np_real_numeric[:, ::1] rect_feat
 
     half_w = width // 2
     rect_count = ((height * (height + 1) / 2)
                   * (half_w * (half_w + 1)
                      - (1 - (width % 2)) * half_w))
 
-    rect_feat = np.empty((rect_count, 2), dtype=np.int)
+    rect_feat = np.empty((rect_count, 2), dtype=int_image.dtype.base)
 
     with nogil:
         idx = 0
-        for y in range(height):
-            for x in range(width - 1):
-                for dy in range(height - y):
-                    for dx in range((width - x) // 2):
+        for y in range(r, r + height):
+            for x in range(c, c + width - 1):
+                for dy in range(r + height - y):
+                    for dx in range((c + width - x) // 2):
                         rect_feat[idx, 0] = integrate(int_image,
                                                       y, x,
                                                       y + dy, x + dx)
@@ -180,6 +187,51 @@ def get_type_2_x_roi(Py_ssize_t width, Py_ssize_t height):
     return np.asarray(rect_feat)
 
 
+def get_type_2_y_feature(np_real_numeric[:, ::1] int_image,
+                         Py_ssize_t r, Py_ssize_t c,
+                         Py_ssize_t width, Py_ssize_t height):
+    """Compute type-2-y Haar-like features.
+
+    Parameters
+    ----------
+    int_image : (M, N) ndarray
+        Integral image for which the features need to be computed.
+    r : int
+        Row-coordinate of top left corner of the detection window.
+    c : int
+        Column-coordinate of top left corner of the detection window.
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, y, dx, dy, idx, rect_count, half_h
+        np_real_numeric[:, ::1] rect_feat
+
+    half_h = height // 2
+    rect_count = ((width * (width + 1) / 2)
+                  * (half_h * (half_h + 1)
+                     - (1 - (height % 2)) * half_h))
+
+    rect_feat = np.empty((rect_count, 2), dtype=int_image.dtype.base)
+
+    with nogil:
+        idx = 0
+        for y in range(r, r + height - 1):
+            for x in range(c, c + width):
+                for dy in range((r + height - y) // 2):
+                    for dx in range(c + width - x):
+                        rect_feat[idx, 0] = integrate(int_image,
+                                                      y, x,
+                                                      y + dy, x + dx)
+                        rect_feat[idx, 1] = integrate(int_image,
+                                                      y, x + dx + 1,
+                                                      y + 2 * dy + 1, x + dx)
+                        idx += 1
+    return np.asarray(rect_feat)
+
+
 def get_type_2_y_roi(Py_ssize_t width, Py_ssize_t height):
     """Compute the coordinates of type-2-y Haar-like features.
 
@@ -213,6 +265,54 @@ def get_type_2_y_roi(Py_ssize_t width, Py_ssize_t height):
                         _set_roi(rect_feat[idx, 1, ...],
                                  y, x + dx + 1,
                                  y + 2 * dy + 1, x + dx)
+                        idx += 1
+    return np.asarray(rect_feat)
+
+
+def get_type_3_x_feature(np_real_numeric[:, ::1] int_image,
+                         Py_ssize_t r, Py_ssize_t c,
+                         Py_ssize_t width, Py_ssize_t height):
+    """Compute type-3-x Haar-like features.
+
+    Parameters
+    ----------
+    int_image : (M, N) ndarray
+        Integral image for which the features need to be computed.
+    r : int
+        Row-coordinate of top left corner of the detection window.
+    c : int
+        Column-coordinate of top left corner of the detection window.
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, y, dx, dy, idx, rect_count, third_w
+        np_real_numeric[:, ::1] rect_feat
+
+    third_w = width // 3
+    rect_count = ((height * (height + 1) / 2)
+                  * (3 * third_w * (third_w + 1) / 2
+                     - (2 - (width % 3)) * third_w))
+
+    rect_feat = np.empty((rect_count, 3), dtype=int_image.dtype.base)
+
+    with nogil:
+        idx = 0
+        for y in range(r, r + height):
+            for x in range(c, c + width - 2):
+                for dy in range(r + height - y):
+                    for dx in range((c + width - x) // 3):
+                        rect_feat[idx, 0] = integrate(int_image,
+                                                      y, x,
+                                                      y + dy, x + dx)
+                        rect_feat[idx, 1] = integrate(int_image,
+                                                      y, x + dx + 1,
+                                                      y + dy, x + 2 * dx + 1)
+                        rect_feat[idx, 2] = integrate(int_image,
+                                                      y, x + 2 * dx + 2,
+                                                      y + dy, x + 3 * dx + 2)
                         idx += 1
     return np.asarray(rect_feat)
 
@@ -257,6 +357,54 @@ def get_type_3_x_roi(Py_ssize_t width, Py_ssize_t height):
     return np.asarray(rect_feat)
 
 
+def get_type_3_y_feature(np_real_numeric[:, ::1] int_image,
+                         Py_ssize_t r, Py_ssize_t c,
+                         Py_ssize_t width, Py_ssize_t height):
+    """Compute type-3-y Haar-like features.
+
+    Parameters
+    ----------
+    int_image : (M, N) ndarray
+        Integral image for which the features need to be computed.
+    r : int
+        Row-coordinate of top left corner of the detection window.
+    c : int
+        Column-coordinate of top left corner of the detection window.
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, y, dx, dy, idx, rect_count, third_h
+        np_real_numeric[:, ::1] rect_feat
+
+    third_h = height // 3
+    rect_count = ((width * (width + 1) / 2)
+                  * (3 * third_h * (third_h + 1) / 2
+                     - (2 - (height % 3)) * third_h))
+
+    rect_feat = np.empty((rect_count, 3), dtype=int_image.dtype.base)
+
+    with nogil:
+        idx = 0
+        for y in range(r, r + height - 2):
+            for x in range(c, c + width):
+                for dy in range((r + height - y) // 3):
+                    for dx in range(c + width - x):
+                        rect_feat[idx, 0] = integrate(int_image,
+                                                      y, x,
+                                                      y + dy, x + dx)
+                        rect_feat[idx, 1] = integrate(int_image,
+                                                      y + dy + 1, x,
+                                                      y + 2 * dy + 1, x + dx)
+                        rect_feat[idx, 2] = integrate(int_image,
+                                                      y + 2 * dy + 2, x,
+                                                      y + 3 * dy + 2, x + dx)
+                        idx += 1
+    return np.asarray(rect_feat)
+
+
 def get_type_3_y_roi(Py_ssize_t width, Py_ssize_t height):
     """Compute the coordinates of type-3-y Haar-like features.
 
@@ -297,6 +445,60 @@ def get_type_3_y_roi(Py_ssize_t width, Py_ssize_t height):
     return np.asarray(rect_feat)
 
 
+def get_type_4_feature(np_real_numeric[:, ::1] int_image,
+                       Py_ssize_t r, Py_ssize_t c,
+                       Py_ssize_t width, Py_ssize_t height):
+    """Compute type-4 Haar-like features.
+
+    Parameters
+    ----------
+    int_image : (M, N) ndarray
+        Integral image for which the features need to be computed.
+    r : int
+        Row-coordinate of top left corner of the detection window.
+    c : int
+        Column-coordinate of top left corner of the detection window.
+    width : int
+        Width of the detection window.
+    height : int
+        Height of the detection window.
+    """
+    cdef:
+        Py_ssize_t x, y, dx, dy, idx, rect_count, half_h, half_w
+        np_real_numeric[:, ::1] rect_feat
+
+    half_w = width // 2
+    half_h = height // 2
+    rect_count = ((half_h * (half_h + 1)
+                   - (1 - (height % 2)) * half_h)
+                  * (half_w * (half_w + 1)
+                     - (1 - (width % 2)) * half_w))
+
+    rect_feat = np.empty((rect_count, 4), dtype=int_image.dtype.base)
+
+    with nogil:
+        idx = 0
+        for y in range(r, r + height - 1):
+            for x in range(c, c + width - 1):
+                for dy in range((r + height - y) // 2):
+                    for dx in range((c + width - x) // 2):
+                        rect_feat[idx, 0] = integrate(int_image,
+                                                      y, x,
+                                                      y + dy, x + dx)
+                        rect_feat[idx, 1] = integrate(int_image,
+                                                      y, x + dx + 1,
+                                                      y + dy, x + 2 * dx + 1)
+                        rect_feat[idx, 2] = integrate(int_image,
+                                                      y + dy + 1, x + dx + 1,
+                                                      y + 2 * dy + 1,
+                                                      x + 2 * dx + 1)
+                        rect_feat[idx, 3] = integrate(int_image,
+                                                      y + dy + 1, x,
+                                                      y + 2 * dy + 1, x + dx)
+                        idx += 1
+    return np.asarray(rect_feat)
+
+
 def get_type_4_roi(Py_ssize_t width, Py_ssize_t height):
     """Compute the coordinates of type-4 Haar-like features.
 
@@ -310,7 +512,6 @@ def get_type_4_roi(Py_ssize_t width, Py_ssize_t height):
     cdef:
         Py_ssize_t x, y, dx, dy, idx, rect_count, half_h, half_w
         Py_ssize_t[:, :, :, ::1] rect_feat
-
 
     half_w = width // 2
     half_h = height // 2
@@ -361,7 +562,7 @@ cdef vector[vector[Rectangle]] _type_2_x_feature(Py_ssize_t width,
         size_t idx, rect_count, half_w
 
     half_w = width // 2
-    rect_count = ((height * (height + 1) / 2)
+    rect_count = ((height * (height + 1) / 2 - 1)
                   * (half_w * (half_w + 1)
                      - (1 - (width % 2)) * half_w))
 
@@ -372,7 +573,7 @@ cdef vector[vector[Rectangle]] _type_2_x_feature(Py_ssize_t width,
     idx = 0
     for y in range(height):
         for x in range(width - 1):
-            for dy in range(height - y):
+            for dy in range(height - max(y, 1)):
                 for dx in range((width - x) // 2):
                     set_rectangle_feature(&single_rect,
                                           y, x,
@@ -405,7 +606,7 @@ cdef vector[vector[Rectangle]] _type_2_y_feature(Py_ssize_t width,
         size_t idx, rect_count, half_h
 
     half_h = height // 2
-    rect_count = ((width * (width + 1) / 2)
+    rect_count = ((width * (width + 1) / 2 - 1)
                   * (half_h * (half_h + 1)
                      - (1 - (height % 2)) * half_h))
 
@@ -417,7 +618,7 @@ cdef vector[vector[Rectangle]] _type_2_y_feature(Py_ssize_t width,
     for y in range(height - 1):
         for x in range(width):
             for dy in range((height - y) // 2):
-                for dx in range(width - x):
+                for dx in range(width - max(x, 1)):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)
@@ -448,7 +649,7 @@ cdef vector[vector[Rectangle]] _type_3_x_feature(Py_ssize_t width,
         size_t idx, rect_count, third_w
 
     third_w = width // 3
-    rect_count = ((height * (height + 1) / 2)
+    rect_count = ((height * (height + 1) / 2 - 1)
                   * (3 * third_w * (third_w + 1) / 2
                      - (2 - (width % 3)) * third_w))
 
@@ -460,7 +661,7 @@ cdef vector[vector[Rectangle]] _type_3_x_feature(Py_ssize_t width,
     idx = 0
     for y in range(height):
         for x in range(width - 2):
-            for dy in range(height - y):
+            for dy in range(height - max(y, 1)):
                 for dx in range((width - x) // 3):
                     set_rectangle_feature(&single_rect,
                                           y, x,
@@ -496,7 +697,7 @@ cdef vector[vector[Rectangle]] _type_3_y_feature(Py_ssize_t width,
         size_t idx, rect_count, third_h
 
     third_h = height // 3
-    rect_count = ((width * (width + 1) / 2)
+    rect_count = ((width * (width + 1) / 2 - 1)
                   * (3 * third_h * (third_h + 1) / 2
                      - (2 - (height % 3)) * third_h))
 
@@ -509,7 +710,7 @@ cdef vector[vector[Rectangle]] _type_3_y_feature(Py_ssize_t width,
     for y in range(height - 2):
         for x in range(width):
             for dy in range((height - y) // 3):
-                for dx in range(width - x):
+                for dx in range(width - max(x, 1)):
                     set_rectangle_feature(&single_rect,
                                           y, x,
                                           y + dy, x + dx)

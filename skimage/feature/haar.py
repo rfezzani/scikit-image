@@ -32,7 +32,7 @@ def _validate_feature_type(feature_type):
         if isinstance(feature_type, str):
             feature_type_ = [feature_type]
         else:
-            feature_type_ = set(feature_type)
+            feature_type_ = feature_type
         for feat_t in feature_type_:
             if feat_t not in FEATURE_TYPE:
                 raise ValueError(
