@@ -7,9 +7,13 @@ from ..color.colorconv import gray2rgb
 from ..draw.draw import rectangle
 from .._shared.utils import check_random_state
 from ..util.dtype import img_as_float
-from ._haar import (haar_like_feature_coord_wrapper, haar_like_feature_wrapper,
-                    get_type_2_x_roi, get_type_2_y_roi, get_type_3_x_roi,
-                    get_type_3_y_roi, get_type_4_roi, get_type_2_x_roi_from_idx)
+from ._haar import (haar_like_feature_coord_wrapper,
+                    haar_like_feature_wrapper, get_type_2_x_roi,
+                    get_type_2_y_roi, get_type_3_x_roi,
+                    get_type_3_y_roi, get_type_4_roi,
+                    get_type_2_x_feature, get_type_2_y_feature,
+                    get_type_3_x_feature, get_type_3_y_feature,
+                    get_type_4_feature)
 
 
 FEATURE_TYPE = ('type-2-x', 'type-2-y',
@@ -17,11 +21,18 @@ FEATURE_TYPE = ('type-2-x', 'type-2-y',
                 'type-4')
 
 
-COORD_FUNC = {'type-2-x': get_type_2_x_roi,
-              'type-2-y': get_type_2_y_roi,
-              'type-3-x': get_type_3_x_roi,
-              'type-3-y': get_type_3_y_roi,
-              'type-4': get_type_4_roi}
+GET_COORD = {'type-2-x': get_type_2_x_roi,
+             'type-2-y': get_type_2_y_roi,
+             'type-3-x': get_type_3_x_roi,
+             'type-3-y': get_type_3_y_roi,
+             'type-4': get_type_4_roi}
+
+
+GET_FEATURE = {'type-2-x': get_type_2_x_feature,
+               'type-2-y': get_type_2_y_feature,
+               'type-3-x': get_type_3_x_feature,
+               'type-3-y': get_type_3_y_feature,
+               'type-4': get_type_4_feature}
 
 
 def _validate_feature_type(feature_type):
@@ -84,7 +95,7 @@ tuple coord
     """
     feature_type_ = _validate_feature_type(feature_type)
 
-    return {f_type: COORD_FUNC[f_type](width, height)
+    return {f_type: GET_COORD[f_type](width, height)
             for f_type in feature_type_}
 
 

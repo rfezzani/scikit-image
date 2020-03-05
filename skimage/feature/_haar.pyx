@@ -31,6 +31,22 @@ cdef inline void _set_roi( Py_ssize_t[:, ::1] rect,
     rect[1, 1] = j1
 
 
+def _finalize(rect_feature):
+
+    # convert the memory view to numpy array and convert it to signed array if
+    # necessary to avoid overflow during subtraction
+    rect_feature_ndarray = np.asarray(rect_feature)
+    out_dtype = rect_feature_ndarray.dtype
+    if out_dtype.name.startswith('uint'):
+        out_dtype = out_dtype.replace('u', '')
+        rect_feature_ndarray = rect_feature_ndarray.astype(out_dtype)
+
+    # the rectangles with odd indices can always be subtracted to the rectangle
+    # with even indices
+    return (np.sum(rect_feature_ndarray[1::2], axis=0) -
+            np.sum(rect_feature_ndarray[::2], axis=0))
+
+
 cdef inline void _set_type_2_x_roi(Py_ssize_t[:, :, ::1] rect_coord,
                                    Py_ssize_t y,
                                    Py_ssize_t start_idx,
@@ -147,7 +163,7 @@ def get_type_2_x_feature(np_real_numeric[:, ::1] int_image,
                                                       y, x + dx + 1,
                                                       y + dy, x + 2 * dx + 1)
                         idx += 1
-    return np.asarray(rect_feat)
+    return _finalize(rect_feat)
 
 
 def get_type_2_x_roi(Py_ssize_t width, Py_ssize_t height):
@@ -229,7 +245,7 @@ def get_type_2_y_feature(np_real_numeric[:, ::1] int_image,
                                                       y, x + dx + 1,
                                                       y + 2 * dy + 1, x + dx)
                         idx += 1
-    return np.asarray(rect_feat)
+    return _finalize(rect_feat)
 
 
 def get_type_2_y_roi(Py_ssize_t width, Py_ssize_t height):
@@ -314,7 +330,7 @@ def get_type_3_x_feature(np_real_numeric[:, ::1] int_image,
                                                       y, x + 2 * dx + 2,
                                                       y + dy, x + 3 * dx + 2)
                         idx += 1
-    return np.asarray(rect_feat)
+    return _finalize(rect_feat)
 
 
 def get_type_3_x_roi(Py_ssize_t width, Py_ssize_t height):
@@ -402,7 +418,7 @@ def get_type_3_y_feature(np_real_numeric[:, ::1] int_image,
                                                       y + 2 * dy + 2, x,
                                                       y + 3 * dy + 2, x + dx)
                         idx += 1
-    return np.asarray(rect_feat)
+    return _finalize(rect_feat)
 
 
 def get_type_3_y_roi(Py_ssize_t width, Py_ssize_t height):
@@ -496,7 +512,7 @@ def get_type_4_feature(np_real_numeric[:, ::1] int_image,
                                                       y + dy + 1, x,
                                                       y + 2 * dy + 1, x + dx)
                         idx += 1
-    return np.asarray(rect_feat)
+    return _finalize(rect_feat)
 
 
 def get_type_4_roi(Py_ssize_t width, Py_ssize_t height):
