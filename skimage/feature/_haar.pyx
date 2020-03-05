@@ -174,14 +174,14 @@ tuple coord
     return output, np.array([feature_type] * n_feature, dtype=object)
 
 
-cdef integral_floating[:, ::1] _haar_like_feature(
-        integral_floating[:, ::1] int_image,
+cdef np_real_numeric[:, ::1] _haar_like_feature(
+        np_real_numeric[:, ::1] int_image,
         vector[vector[Rectangle]] coord,
         Py_ssize_t n_rectangle, Py_ssize_t n_feature):
     """Private function releasing the GIL to compute the integral for the
     different rectangle."""
     cdef:
-        integral_floating[:, ::1] rect_feature = np.empty(
+        np_real_numeric[:, ::1] rect_feature = np.empty(
             (n_rectangle, n_feature), dtype=int_image.base.dtype)
 
         Py_ssize_t idx_rect, idx_feature
@@ -200,7 +200,7 @@ cdef integral_floating[:, ::1] _haar_like_feature(
 
 
 cpdef haar_like_feature_wrapper(
-    cnp.ndarray[integral_floating, ndim=2] int_image,
+    cnp.ndarray[np_real_numeric, ndim=2] int_image,
     r, c, width, height, feature_type, feature_coord):
     """Compute the Haar-like features for a region of interest (ROI) of an
     integral image.
@@ -259,7 +259,7 @@ cpdef haar_like_feature_wrapper(
         vector[vector[Rectangle]] coord
         Py_ssize_t n_rectangle, n_feature
         Py_ssize_t idx_rect, idx_feature
-        integral_floating[:, ::1] rect_feature
+        np_real_numeric[:, ::1] rect_feature
         # FIXME: currently cython does not support read-only memory views.
         # Those are used with joblib when using Parallel. Therefore, we use
         # ndarray as input. We take a copy of this ndarray to create a memory
@@ -267,7 +267,7 @@ cpdef haar_like_feature_wrapper(
         # Check the following issue to check the status of read-only memory
         # views in cython:
         # https://github.com/cython/cython/issues/1605 to be resolved
-        integral_floating[:, ::1] int_image_memview = int_image[
+        np_real_numeric[:, ::1] int_image_memview = int_image[
             r : r + height, c : c + width].copy()
 
     if feature_coord is None:

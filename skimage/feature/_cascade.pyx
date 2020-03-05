@@ -11,7 +11,6 @@ cimport safe_openmp as openmp
 from safe_openmp cimport have_openmp
 from libc.stdlib cimport malloc, free
 from libcpp.vector cimport vector
-from skimage._shared.transform cimport integrate
 
 from skimage._shared.interpolation cimport round, fmax, fmin
 
@@ -467,7 +466,8 @@ cdef class Cascade:
 
         self._load_xml(xml_file, eps)
 
-    cdef bint classify(self, float[:, ::1] int_img, Py_ssize_t row, Py_ssize_t col, float scale) nogil:
+    cdef bint classify(self, cnp.float32_t[:, ::1] int_img, Py_ssize_t row,
+                       Py_ssize_t col, float scale) nogil:
         """Classify the provided image patch i.e. check if the classifier
         detects an object in the given image patch.
 
@@ -678,7 +678,7 @@ cdef class Cascade:
             Py_ssize_t window_width = self.window_width
             int result
             float[::1] scale_factors
-            float[:, ::1] int_img
+            cnp.float32_t[:, ::1] int_img
             float current_scale_factor
             vector[Detection] output
             Detection new_detection
@@ -719,7 +719,9 @@ cdef class Cascade:
             while current_row < max_row:
                 while current_col < max_col:
 
-                    result = self.classify(int_img, current_row, current_col, scale_factors[scale_number])
+                    result = self.classify(int_img, current_row,
+                                           current_col,
+                                           scale_factors[scale_number])
 
                     if result:
 
