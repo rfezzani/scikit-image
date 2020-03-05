@@ -3,8 +3,7 @@
 #cython: nonecheck=False
 #cython: wraparound=False
 
-
-cdef integral_floating integrate(integral_floating[:, ::1] sat,
+cdef np_signed_numeric integrate(np_real_numeric[:, ::1] sat,
                                  Py_ssize_t r0, Py_ssize_t c0,
                                  Py_ssize_t r1, Py_ssize_t c1) nogil:
     """
@@ -29,7 +28,7 @@ cdef integral_floating integrate(integral_floating[:, ::1] sat,
     S : int
         Sum over the given window.
     """
-    cdef integral_floating S = 0
+    cdef np_signed_numeric S = 0
 
     S += sat[r1, c1]
 
