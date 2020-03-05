@@ -25,6 +25,10 @@ ctypedef fused np_complexes:
     cnp.complex64_t
     cnp.complex128_t
 
+ctypedef fused np_signed_numeric:
+    np_ints
+    np_floats
+
 ctypedef fused np_real_numeric:
     np_anyint
     np_floats
