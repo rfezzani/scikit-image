@@ -26,6 +26,8 @@ def _get_peak_mask(image, min_distance, footprint, threshold_abs,
     Return the mask containing all peak candidates above thresholds.
     """
     if footprint is not None:
+        if footprint.size == 1:
+            return np.ones_like(image, dtype=bool)
         image_max = ndi.maximum_filter(image, footprint=footprint,
                                        mode='constant')
     else:
@@ -37,6 +39,11 @@ def _get_peak_mask(image, min_distance, footprint, threshold_abs,
     else:
         threshold = threshold_abs
     mask &= image > threshold
+
+    # no peak for a trivial image
+    if image.size > 1 and np.count_nonzero(mask) == image.size:
+        mask[:] = False
+
     return mask
 
 
@@ -187,13 +194,6 @@ def peak_local_max(image, min_distance=1, threshold_abs=None,
         raise TypeError(
             "`exclude_border` must be bool, int, or tuple with the same "
             "length as the dimensionality of the image.")
-
-    # no peak for a trivial image
-    if np.all(image == image.flat[0]):
-        if indices is True:
-            return np.empty((0, image.ndim), np.int)
-        else:
-            return out
 
     # In the case of labels, call ndi on each label
     if labels is not None:
