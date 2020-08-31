@@ -37,7 +37,7 @@ PROPS = {
     'EulerNumber': 'euler_number',
     'Extent': 'extent',
     # 'Extrema',
-    'FeretDiameter': 'feret_diameter',
+    'FeretDiameterMax': 'feret_diameter_max',
     'FilledArea': 'filled_area',
     'FilledImage': 'filled_image',
     'HuMoments': 'moments_hu',
@@ -87,7 +87,7 @@ COL_DTYPES = {
     'equivalent_diameter': float,
     'euler_number': int,
     'extent': float,
-    'feret_diameter': float,
+    'feret_diameter_max': float,
     'filled_area': int,
     'filled_image': object,
     'moments_hu': float,
@@ -318,10 +318,7 @@ class RegionProperties:
 
     @property
     def equivalent_diameter(self):
-        if self._ndim == 2:
-            return sqrt(4 * self.area / PI)
-        elif self._ndim == 3:
-            return (6 * self.area / PI) ** (1. / 3)
+        return (2 * self._ndim * self.area / PI) ** (1 / self._ndim)
 
     @property
     def euler_number(self):
@@ -335,7 +332,7 @@ class RegionProperties:
         return self.area / self.image.size
 
     @property
-    def feret_diameter(self):
+    def feret_diameter_max(self):
         identity_convex_hull = np.pad(self.convex_image,
                                       2, mode='constant', constant_values=0)
         if self._ndim == 2:
@@ -892,7 +889,7 @@ def regionprops(label_image, intensity_image=None, cache=True,
     **extent** : float
         Ratio of pixels in the region to pixels in the total bounding box.
         Computed as ``area / (rows * cols)``
-    **feret_diameter** : float
+    **feret_diameter_max** : float
         Maximum Feret's diameter computed as the longest distance between
         points around a region's convex hull contour as determined by
         ``find_contours``. [5]_
@@ -1029,6 +1026,7 @@ def regionprops(label_image, intensity_image=None, cache=True,
     (22.72987986048314, 81.91228523446583)
 
     Add custom measurements by passing functions as ``extra_properties``
+
     >>> from skimage import data, util
     >>> from skimage.measure import label, regionprops
     >>> import numpy as np
